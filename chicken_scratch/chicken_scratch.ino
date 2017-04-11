@@ -1,52 +1,31 @@
 // Plotclock
 // cc - by Johannes Heberlein 2014; modifications by ME102B Project Group 2017
-// v 1.02
-// thingiverse.com/joo   wiki.fablab-nuernberg.de
-// units: mm; microseconds; radians
-// origin: bottom left of drawing surface
-// time library see http://playground.arduino.cc/Code/time
-// RTC  library see http://playground.arduino.cc/Code/time
-//               or http://www.pjrc.com/teensy/td_libs_DS1307RTC.html
-// Change log:
-// 1.01  Release by joo at https://github.com/9a/plotclock
-// 1.02  Additional features implemented by Dave:
-//       - added ability to calibrate servofaktor seperately for left and right servos
-//       - added code to support DS1307, DS1337 and DS3231 real time clock chips
-//       - see http://www.pjrc.com/teensy/td_libs_DS1307RTC.html for how to hook up the real time clock
-//
-// 1.03  Remix/mod by Kjetil Egeland
 
-// delete or mark the next line as comment if you don't need these
-//#define CALIBRATION      // enable calibration mode
-//#define REALTIMECLOCK    // enable real time clock
+#define CALIBRATION      // uncomment to enable calibration mode
 
 // When in calibration mode, adjust the following factor until the servos move exactly 90 degrees
-#define SERVOFAKTORLEFT 610
-#define SERVOFAKTORRIGHT 630
+// Note: robot-right is left, robot-left is right in code, where robot-left means facing from robot's writing perspective.
+#define SERVOFAKTORLEFT 610 // 610 describes the range of angles swept by left motor. smaller means smaller range. SERVOFAKTORLEFT and -RIGHT should be about same.
+#define SERVOFAKTORRIGHT 630 //630
 
 // Zero-position of left and right servo
 // When in calibration mode, adjust the NULL-values so that the servo arms are at all times parallel
 // either to the X or Y axis
-//#define SERVOLEFTNULL 2250
-//#define SERVORIGHTNULL 920
-#define SERVOLEFTNULL 2200 // bigger means doesn't go as far outside (to the right of the desk) // this is robot's right?
-#define SERVORIGHTNULL 680 // sets the horizontal line
+// determine the origin from which servos rotate +90 deg.
+#define SERVOLEFTNULL 2200 //  bigger means doesn't go as far outside (to the right of the desk)
+#define SERVORIGHTNULL 1000 // sets the horizontal line (goes down below writing surface when bigger)
 
 #define SERVOPINLIFT  11
 #define SERVOPINLEFT  12
 #define SERVOPINRIGHT 13
 
 // lift positions of lifting servo
-//#define LIFT0 1080 // on drawing surface
-//#define LIFT1 925  // between numbers
-//#define LIFT2 725  // going towards sweeper
 #define LIFT0 940  // on drawing surface ((higher number is pen closer to surface, lower is more raised) writing plane angle, 0 is writing surface lifted up)
 #define LIFT1 825  // between numbers (lift on space???)
 #define LIFT2 1005  // going towards eraser (lift on erase???)
 
 // speed of lifting arm, higher is slower
-//#define LIFTSPEED 1500
-#define LIFTSPEED 3000
+#define LIFTSPEED 3000 // 1500
 
 // length of arms
 #define L1 35
@@ -54,10 +33,6 @@
 #define L3 13.2
 
 // origin points of left and right servo
-//#define O1X 22
-//#define O1Y -25
-//#define O2X 47
-//#define O2Y -25
 #define O1X 21
 #define O1Y -25
 #define O2X 48
@@ -69,16 +44,6 @@
 
 #include <TimeLib.h> // see http://playground.arduino.cc/Code/time 
 #include <Servo.h>
-
-#ifdef REALTIMECLOCK
-// for instructions on how to hook up a real time clock,
-// see here -> http://www.pjrc.com/teensy/td_libs_DS1307RTC.html
-// DS1307RTC works with the DS1307, DS1337 and DS3231 real time clock chips.
-// Please run the SetTime example to initialize the time on new RTC chips and begin running.
-
-#include <Wire.h>
-#include <DS1307RTC.h> // see http://playground.arduino.cc/Code/time    
-#endif
 
 int servoLift = 1500;
 
@@ -95,42 +60,14 @@ int last_min = 0;
 
 void setup()
 {
-#ifdef REALTIMECLOCK
-  Serial.begin(9600);
-  //while (!Serial) { ; } // wait for serial port to connect. Needed for Leonardo only
-
-  // Set current time only the first to values, hh,mm are needed
-  tmElements_t tm;
-  if (RTC.read(tm))
-  {
-    setTime(tm.Hour, tm.Minute, tm.Second, tm.Day, tm.Month, tm.Year);
-    Serial.println("DS1307 time is set OK.");
-  }
-  else
-  {
-    if (RTC.chipPresent())
-    {
-      Serial.println("DS1307 is stopped.  Please run the SetTime example to initialize the time and begin running.");
-    }
-    else
-    {
-      Serial.println("DS1307 read error!  Please check the circuitry.");
-    }
-    // Set current time only the first to values, hh,mm are needed
-    setTime(15, 05, 0, 0, 0, 0);
-  }
-#else
   // Set current time only the first to values, hh,mm are needed
   setTime(15, 35, 0, 0, 0, 0);
-#endif
-
   drawTo(PARKX, PARKY);
   lift(0);
   servo1.attach(SERVOPINLIFT);  //  lifting servo
   servo2.attach(SERVOPINLEFT);  //  left servo
   servo3.attach(SERVOPINRIGHT);  //  right servo
   delay(1000);
-
 }
 
 void loop()
