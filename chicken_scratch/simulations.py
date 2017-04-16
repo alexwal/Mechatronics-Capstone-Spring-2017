@@ -21,14 +21,19 @@ mag = np.linalg.norm # L2 norm
     [A], [B]    : unactuated joints coordinates.
     t1, t2      : joint angles.
 
-                    ____V____ [q = (x, y)]
+                        V [q = (x, y)]
+                       / \ 
+                      /   \ 
+                     /     \ 
+                    /       \ 
                    /         \ 
                   /           \ 
                  /             \ 
             [A] /               \ [B]
                 \               /
                  \             /
-                  \ t1        / t2
+                  \           /
+                   \ t1      / t2
 [Origin] -------- [L] ----- [R]               
 (0, 0)                                         ^ y
 |----------------->| = a                       |
