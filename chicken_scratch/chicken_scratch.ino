@@ -15,9 +15,9 @@
 #define SERVOLEFTNULL 2200 //  bigger means doesn't go as far outside (to the right of the desk)
 #define SERVORIGHTNULL 1000 // sets the horizontal line (goes down below writing surface when bigger)
 
-#define SERVOPINLIFT  11
-#define SERVOPINLEFT  12
-#define SERVOPINRIGHT 13
+#define SERVOPINLIFT  11 // lift
+#define SERVOPINLEFT  12 // left
+#define SERVOPINRIGHT 13 // right
 
 // lift positions of lifting servo
 #define LIFT0 940  // on drawing surface ((higher number is pen closer to surface, lower is more raised) writing plane angle, 0 is writing surface lifted up)
@@ -31,6 +31,7 @@
 #define L1 35
 #define L2 57.1
 #define L3 13.2
+// shorter servo arm is (L2 - L3).
 
 // origin points of left and right servo
 #define O1X 21
@@ -47,9 +48,9 @@
 
 int servoLift = 1500;
 
-Servo servo1;  //
-Servo servo2;  //
-Servo servo3;  //
+Servo servo1; // lift
+Servo servo2; // left
+Servo servo3; // right
 
 volatile double lastX = 75;
 volatile double lastY = PARKY;
@@ -74,7 +75,6 @@ void loop()
 {
 
 #ifdef CALIBRATION
-
   // Servohorns will have 90° between movements, parallel to x and y axis
   drawTo(-3, 29.2);
   delay(500);
@@ -359,17 +359,15 @@ void drawTo(double pX, double pY) {
   // dx dy of new point
   dx = pX - lastX;
   dy = pY - lastY;
-  //path lenght in mm, times 4 equals 4 steps per mm
-  c = floor(4 * sqrt(dx * dx + dy * dy));
+  // path length in mm * 4 = 4 steps per mm
+  c = floor(4 * sqrt(dx * dx + dy * dy));  // Approx arc length in mm is sqrt(dx * dx + dy * dy). Number of servo steps is 4 * (# mm). c gives us number of servo steps to new point.
 
   if (c < 1) c = 1;
 
-  for (i = 0; i <= c; i++) {
+  for (i = 0; i <= c; i++) { // for each servo step in arc length
     // draw line point by point
     set_XY(lastX + (i * dx / c), lastY + (i * dy / c));
-
   }
-
   lastX = pX;
   lastY = pY;
 }
@@ -384,19 +382,19 @@ void set_XY(double Tx, double Ty)
   delay(1);
   double dx, dy, c, a1, a2, Hx, Hy;
 
-  // calculate triangle between pen, servoLeft and arm joint
+  // calculate triangle between pen, servoLeft and arm joint (servo-left joint angle)
   // cartesian dx/dy
   dx = Tx - O1X;
   dy = Ty - O1Y;
 
-  // polar lemgth (c) and angle (a1)
+  // polar length (c) and angle (a1)
   c = sqrt(dx * dx + dy * dy); //
-  a1 = atan2(dy, dx); //
+  a1 = atan2(dy, dx); // (angle on surface)
   a2 = return_angle(L1, L2, c);
 
   servo2.writeMicroseconds(floor(((a2 + a1 - M_PI) * SERVOFAKTORLEFT) + SERVOLEFTNULL));
 
-  // calculate joinr arm point for triangle of the right servo arm
+  // calculate joint arm point for triangle of the right servo arm
   a2 = return_angle(L2, L1, c);
   Hx = Tx + L3 * cos((a1 - a2 + 0.621) + M_PI); //36,5°
   Hy = Ty + L3 * sin((a1 - a2 + 0.621) + M_PI);
