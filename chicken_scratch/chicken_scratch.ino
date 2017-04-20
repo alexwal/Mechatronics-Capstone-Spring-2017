@@ -113,9 +113,9 @@ void setup() {
   t2_cur = pi/2; // add description.
 
   // Attach servos to pins.
-  left_servo.attach(SERVO_PIN_LIFT);
-  right_servo.attach(SERVO_PIN_LEFT);
-  lift_servo.attach(SERVO_PIN_RIGHT);
+  lift_servo.attach(SERVO_PIN_LIFT);
+  left_servo.attach(SERVO_PIN_LEFT);
+  right_servo.attach(SERVO_PIN_RIGHT);
 }
 
 // Used in finding: theta' = J * q', the required nudge of angles to get
