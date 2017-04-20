@@ -59,7 +59,6 @@ double midpoint; //= a + (b-a) / 2.0;
 //assert l2 + l3 > midpoint, 'impossible dimensions: arms disconnected!'
 
 // Corners of end effector space. See diagram.
-double extra = 1;
 double C1[2];
 double C2[2];
 double C3[2];
@@ -94,6 +93,7 @@ void setup() {
   midpoint = a + (b-a) / 2.0;
 
   // Setup "desk" boundaries.
+  double extra = 1;
   C1[0] = a - l1;
   C1[1] = 0; // function of lis?
   C2[0] = a - l1;
