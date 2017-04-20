@@ -1,4 +1,4 @@
-/*  Mechatronics 102B
+/*  Mechatronics ME102B
     Simulation of joint angle path
     required to move from one point
     to another.
@@ -9,6 +9,7 @@
     [q]         : end effector.
     [A], [B]    : unactuated joints coordinates.
     t1, t2      : joint angles.
+
                         V [q = (x, y)]
                        / \ 
                       /   \ 
@@ -26,15 +27,17 @@
 (0, 0)                                         ^ y
 |----------------->| = a                       |
 |--------------------------->| = b              --> x
-End effector space boundaries:
-  [C2]                    [C3]
-   ...                    ...
-   ...          V  [q]    ...
-   ...         / \        ...
-   ...                    ...
-   ...       ... ...      ...
-   ...                    ...
-  [C1]      [L]   [R]     [C4]
+
+    End effector space boundaries:
+
+          [C2]                    [C3]
+           ...                    ...
+           ...          V  [q]    ...
+           ...         / \        ...
+           ...                    ...
+           ...       ... ...      ...
+           ...                    ...
+          [C1]      [L]   [R]     [C4]
 */
 #include <stdlib.h>
 #include <stdio.h>
@@ -83,6 +86,7 @@ double step_size = 0.2; // initial value of alpha in move(...)
 double decay = 0.001; // step size decay
 double tolerance = 0.1;
 
+// We update these arrays as we move the robot.
 double J[2][2]; // this is the Jacobian
 double t1_joint_path[MAX_SIZE];
 double t2_joint_path[MAX_SIZE];
@@ -93,7 +97,7 @@ void setup() {
   // Setup "desk" boundaries.
   double extra = 1;
   C1[0] = a - l1;
-  C1[1] = 0; // function of lis?
+  C1[1] = 0; 
   C2[0] = a - l1;
   C2[1] = l1 + l2 + extra;
   C3[0] = b + l4;
@@ -108,6 +112,7 @@ void setup() {
   t1_cur = pi/2;
   t2_cur = pi/2; // add description.
 
+  // Attach servos to pins.
   left_servo.attach(SERVO_PIN_LIFT);
   right_servo.attach(SERVO_PIN_LEFT);
   lift_servo.attach(SERVO_PIN_RIGHT);
@@ -142,14 +147,21 @@ double mag(double v1, double v2) {
   return sqrt(v1 * v1 + v2 * v2);
 }
 
+// Moves and updates the current robot configuration over some time until
+// end effector reaches the desired point: q = (xdes, ydes).
 void move(double xdes, double ydes) {
-  // Fill in.
   double alpha = step_size;
   int i = 0;
   t1_joint_path[i] = -1;
   t2_joint_path[i] = -1;
   while (mag(xdes - x_cur, ydes - y_cur) > tolerance && i < MAX_SIZE) {
+
+      // The Jacobian is the exact approximation of our dynamics at the current state.
+      // We use it to approximate the correct movement of joint angles that will 
+      // produce a desired movement of the end effector (towards q = (xdes, ydes)).
       compute_Jacobian(x_cur, y_cur, t1_cur, t2_cur);
+      
+      // Determine in what direction the end effector should move to get to desired position.
       double dxdt = xdes - x_cur;
       double dydt = ydes - y_cur;
 
@@ -159,6 +171,8 @@ void move(double xdes, double ydes) {
           dxdt = dxdt/norm;
           dydt = dydt/norm;
       }
+
+      // Compute theta' using Jacobian.
       double dt1dt = compute_dt1dt(dxdt, dydt); // first row of J times q'
       double dt2dt = compute_dt2dt(dxdt, dydt); // secnd row of J times q'
                                                 // = theta'
@@ -193,6 +207,7 @@ void move(double xdes, double ydes) {
       x_path[i] = x_cur; // use path to debug.
       y_path[i] = y_cur;
       
+      // Increment iterations.
       i += 1;
 
       if(i % 20 == 0) { // decay step size over time as we're drawing one line.
@@ -212,15 +227,23 @@ void loop() {
   // Now, we will have a loop which incrementally updates the servo positions so that
   // the end effector ends up at (xdes, ydes).
 
-  // loop through desired path and set servo angles accordingly.
+  // Loop through desired end effector path and set servo angles accordingly and at small enough steps.
   double x_next;
   double y_next;
   if (xdes_path[path_index] != -1 && ydes_path[path_index] != -1) { // not done drawing path
     printf("Current position @ path_index %d: %f, %f, %f, %f\n", path_index, x_cur, y_cur, t1_cur, t2_cur);
+    
+    // Grab the next point from desired path.
     x_next = xdes_path[path_index];
     y_next = ydes_path[path_index];
+    
+    // Compute the necessary servo angles steps needed to move to that point. 
     move(x_next, y_next);
+  
+    // Prepare to move to the next point. 
     path_index++;
+
+    // Exit if done drawing desired path.
     if (xdes_path[path_index] == -1 || ydes_path[path_index] == -1) {
       printf("Final position @ path_index %d: %f, %f, %f, %f\n", path_index, x_cur, y_cur, t1_cur, t2_cur);
       lift_servo.detach();
