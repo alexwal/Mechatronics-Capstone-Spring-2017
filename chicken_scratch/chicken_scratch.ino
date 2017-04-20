@@ -69,29 +69,27 @@ Servo left_servo;
 Servo right_servo;
 Servo lift_servo;
 
-// Path tuning parameters (see move(...))
+// Store current angle location and (estimate of) tool position.
 double x_cur;
 double y_cur;
 double t1_cur;
 double t2_cur;
+
+// Path tuning parameters (see move(...))
 int path_index = 0;
 double xdes_path[] = {2.500, 2.837, 3.679, 4.858, 5, -1}; // this needs work
 double ydes_path[] = {4.598, 4.382, 3.844, 3.090, 3, -1};
-double alpha = 0.2; // step size
+double step_size = 0.2; // initial value of alpha in move(...)
 double decay = 0.001; // step size decay
 double tolerance = 0.1;
 
 double J[2][2]; // this is the Jacobian
-
 double t1_joint_path[MAX_SIZE];
 double t2_joint_path[MAX_SIZE];
 double x_path[MAX_SIZE];
 double y_path[MAX_SIZE]; 
 
 void setup() {
-  // put your setup code here, to run once:
-  midpoint = a + (b-a) / 2.0;
-
   // Setup "desk" boundaries.
   double extra = 1;
   C1[0] = a - l1;
@@ -104,6 +102,7 @@ void setup() {
   C4[1] = 0;
 
   // Set initial conditions of end effector and joint angles.
+  midpoint = a + (b-a) / 2.0;
   x_cur = midpoint;
   y_cur = l1 + sqrt(l2 * l2 - (midpoint - a) * (midpoint - a));
   t1_cur = pi/2;
@@ -114,6 +113,8 @@ void setup() {
   lift_servo.attach(SERVO_PIN_RIGHT);
 }
 
+// Used in finding: theta' = J * q', the required nudge of angles to get
+// tool to move towards qdes = (xdes,ydes).
 void compute_Jacobian(double x, double y, double t1, double t2) {
   double J_00 = (-a + x - l1 * cos(t1)) / (l1 * (y * cos(t1) + a * sin(t1) - x * sin(t1)));
   double J_01 = (y - l1 * sin(t1)) / (l1 * (y * cos(t1) + a * sin(t1) - x * sin(t1)));
@@ -126,10 +127,12 @@ void compute_Jacobian(double x, double y, double t1, double t2) {
 }
 
 // These two functions do theta' = J*q'.
+// First row of Jacobian dot [q' = (dxdt, dydt)] is first entry of theta'.
 double compute_dt1dt(double dxdt, double dydt) {
   return J[0][0] * dxdt + J[0][1] * dydt;
 }
 
+// Second row of Jacobian dot [q' = (dxdt, dydt)] is second entry of theta'.
 double compute_dt2dt(double dxdt, double dydt) {
   return J[1][0] * dxdt + J[1][1] * dydt;
 }
@@ -140,28 +143,26 @@ double mag(double v1, double v2) {
 }
 
 void move(double xdes, double ydes) {
-  double dt1dt;
-  double dt2dt;
-  
-  //init
+  // Fill in.
+  double alpha = step_size;
   int i = 0;
   t1_joint_path[i] = -1;
   t2_joint_path[i] = -1;
-
-  // loop
   while (mag(xdes - x_cur, ydes - y_cur) > tolerance && i < MAX_SIZE) {
       compute_Jacobian(x_cur, y_cur, t1_cur, t2_cur);
       double dxdt = xdes - x_cur;
       double dydt = ydes - y_cur;
 
+      // Scale q' so that step size is always alpha.
       double norm = mag(dxdt, dydt);
       if (norm > 0.01) {
           dxdt = dxdt/norm;
           dydt = dydt/norm;
       }
-      dt1dt = compute_dt1dt(dxdt, dydt);
-      dt2dt = compute_dt2dt(dxdt, dydt);
-      
+      double dt1dt = compute_dt1dt(dxdt, dydt); // first row of J times q'
+      double dt2dt = compute_dt2dt(dxdt, dydt); // secnd row of J times q'
+                                                // = theta'
+      // Update current position.
       t1_cur = t1_cur + alpha * dt1dt;
       t2_cur = t2_cur + alpha * dt2dt;
 
@@ -169,9 +170,10 @@ void move(double xdes, double ydes) {
       // \\ // \\ // \\ // \\ // \\ // \\ // \\ //
       // // // // // // // // // // // // // // //
       
-      // move servos to t1_cur.
-      // writeMicroseconds: 1000 is fully counter-clockwise, 2000 is fully clockwise, and 1500 is in the middle.
+      // Move servos to current t1, t2.
+      // servo.writeMicroseconds(uS): 1000 is fully counter-clockwise, 2000 is fully clockwise, and 1500 is in the middle.
 
+      // Scale t1, t2 to domain of writeMicroseconds.
       double t1_scaled = t1_cur * 1000 / (2 * pi) + 1000;
       double t2_scaled = t2_cur * 1000 / (2 * pi) + 1000;
       left_servo.writeMicroseconds(t1_scaled);
@@ -181,23 +183,24 @@ void move(double xdes, double ydes) {
       // \\ // \\ // \\ // \\ // \\ // \\ // \\ //
       // // // // // // // // // // // // // // //
 
-      t1_joint_path[i] = t1_cur; // use to debug.
+      t1_joint_path[i] = t1_cur; // use path to debug.
       t2_joint_path[i] = t2_cur;
 
+      // Update current tool position estimate.
       x_cur = x_cur + alpha * dxdt;
       y_cur = y_cur + alpha * dydt;
       
-      x_path[i] = x_cur; // use to debug.
+      x_path[i] = x_cur; // use path to debug.
       y_path[i] = y_cur;
       
       i += 1;
 
-      if(i % 100 == 0) {
+      if(i % 20 == 0) { // decay step size over time as we're drawing one line.
         alpha = alpha * (1 - decay);
       }
     }
   
-  //joint_path list made completely
+  // Done moving servos along joint path. 
   t1_joint_path[i] = -1;
   t2_joint_path[i] = -1;
   x_path[i] = -1;
@@ -219,7 +222,7 @@ void loop() {
     move(x_next, y_next);
     path_index++;
     if (xdes_path[path_index] == -1 || ydes_path[path_index] == -1) {
-      printf("Current position @ path_index %d: %f, %f, %f, %f\n", path_index, x_cur, y_cur, t1_cur, t2_cur);
+      printf("Final position @ path_index %d: %f, %f, %f, %f\n", path_index, x_cur, y_cur, t1_cur, t2_cur);
       lift_servo.detach();
       left_servo.detach();
       right_servo.detach();
