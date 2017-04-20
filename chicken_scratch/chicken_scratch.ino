@@ -116,7 +116,7 @@ void setup() {
 
 void compute_Jacobian(double x, double y, double t1, double t2) {
   double J_00 = (-a + x - l1 * cos(t1)) / (l1 * (y * cos(t1) + a * sin(t1) - x * sin(t1)));
-  double J_01 = (y - l1 * sin(t1))/(l1 * (y * cos(t1) + a * sin(t1) - x * sin(t1)));
+  double J_01 = (y - l1 * sin(t1)) / (l1 * (y * cos(t1) + a * sin(t1) - x * sin(t1)));
   double J_10 = (-b + x - l4 * cos(t2)) / (l4 * (y * cos(t2) + b * sin(t2) - x * sin(t2)));
   double J_11 = (y - l4 * sin(t2)) / (l4 * (y * cos(t2) + b * sin(t2) - x * sin(t2)));
   J[0][0] = J_00;
@@ -125,7 +125,7 @@ void compute_Jacobian(double x, double y, double t1, double t2) {
   J[1][1] = J_11;
 }
 
-// These two function do theta' = J*q'.
+// These two functions do theta' = J*q'.
 double compute_dt1dt(double dxdt, double dydt) {
   return J[0][0] * dxdt + J[0][1] * dydt;
 }
