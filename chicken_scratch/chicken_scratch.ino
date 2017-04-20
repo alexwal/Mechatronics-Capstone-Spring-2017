@@ -1,414 +1,235 @@
-// Plotclock
-// cc - by Johannes Heberlein 2014; modifications by ME102B Project Group 2017
-
-#define CALIBRATION      // uncomment to enable calibration mode
-
-// When in calibration mode, adjust the following factor until the servos move exactly 90 degrees
-// Note: robot-right is left, robot-left is right in code, where robot-left means facing from robot's writing perspective.
-#define SERVOFAKTORLEFT 610 // 610 describes the range of angles swept by left motor. smaller means smaller range. SERVOFAKTORLEFT and -RIGHT should be about same.
-#define SERVOFAKTORRIGHT 630 //630
-
-// Zero-position of left and right servo
-// When in calibration mode, adjust the NULL-values so that the servo arms are at all times parallel
-// either to the X or Y axis
-// determine the origin from which servos rotate +90 deg.
-#define SERVOLEFTNULL 2200 //  bigger means doesn't go as far outside (to the right of the desk)
-#define SERVORIGHTNULL 1000 // sets the horizontal line (goes down below writing surface when bigger)
-
-#define SERVOPINLIFT  11 // lift
-#define SERVOPINLEFT  12 // left
-#define SERVOPINRIGHT 13 // right
-
-// lift positions of lifting servo
-#define LIFT0 940  // on drawing surface ((higher number is pen closer to surface, lower is more raised) writing plane angle, 0 is writing surface lifted up)
-#define LIFT1 825  // between numbers (lift on space???)
-#define LIFT2 1005  // going towards eraser (lift on erase???)
-
-// speed of lifting arm, higher is slower
-#define LIFTSPEED 3000 // 1500
-
-// length of arms
-#define L1 35
-#define L2 57.1
-#define L3 13.2
-// shorter servo arm is (L2 - L3).
-
-// origin points of left and right servo
-#define O1X 21
-#define O1Y -25
-#define O2X 48
-#define O2Y -25
-
-#define PARKX 77
-#define PARKY 47
-#define ERASEMAXX 60
-
-#include <TimeLib.h> // see http://playground.arduino.cc/Code/time 
+/*  Mechatronics 102B
+    Simulation of joint angle path
+    required to move from one point
+    to another.
+  
+    Assuming servos lined up on horizontal axis,
+    and theta drawn counterclockwise and in radians.
+    [L], [R]    : servo coordinates.
+    [q]         : end effector.
+    [A], [B]    : unactuated joints coordinates.
+    t1, t2      : joint angles.
+                        V [q = (x, y)]
+                       / \ 
+                      /   \ 
+                     /     \ 
+                    /       \ 
+                   /         \ 
+                  /           \ 
+                 /             \ 
+            [A] /               \ [B]
+                \               /
+                 \             /
+                  \           /
+                   \ t1      / t2
+[Origin] -------- [L] ----- [R]               
+(0, 0)                                         ^ y
+|----------------->| = a                       |
+|--------------------------->| = b              --> x
+End effector space boundaries:
+  [C2]                    [C3]
+   ...                    ...
+   ...          V  [q]    ...
+   ...         / \        ...
+   ...                    ...
+   ...       ... ...      ...
+   ...                    ...
+  [C1]      [L]   [R]     [C4]
+*/
+#include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
 #include <Servo.h>
 
-int servoLift = 1500;
+#define MAX_SIZE 100
+#define pi 3.1415926536
 
-Servo servo1; // lift
-Servo servo2; // left
-Servo servo3; // right
+#define SERVO_PIN_LIFT  11
+#define SERVO_PIN_LEFT  12
+#define SERVO_PIN_RIGHT 13
 
-volatile double lastX = 75;
-volatile double lastY = PARKY;
+// Fixed robot parameters. (units?)
+double a = 1; // See diagram.
+double b = 4; // See diagram. 
+double l1 = 2; // | [A] - [L] |
+double l2 = 3; // | [q] - [A] |
+double l3 = 3; // | [q] - [B] |
+double l4 = 2; // | [B] - [R] |
+double midpoint; //= a + (b-a) / 2.0;
+//assert l2 + l3 > midpoint, 'impossible dimensions: arms disconnected!'
 
-int last_min = 0;
+// Corners of end effector space. See diagram.
+double extra = 1;
+double C1[2];
+double C2[2];
+double C3[2];
+double C4[2];
 
-//#include <Math.h>
+// Initialize servos.
+Servo left_servo;
+Servo right_servo;
+Servo lift_servo;
 
-void setup()
-{
-  // Set current time only the first to values, hh,mm are needed
-  setTime(15, 35, 0, 0, 0, 0);
-  drawTo(PARKX, PARKY);
-  lift(0);
-  servo1.attach(SERVOPINLIFT);  //  lifting servo
-  servo2.attach(SERVOPINLEFT);  //  left servo
-  servo3.attach(SERVOPINRIGHT);  //  right servo
-  delay(1000);
+// Path tuning parameters (see move(...))
+double x_cur;
+double y_cur;
+double t1_cur;
+double t2_cur;
+int path_index = 0;
+double xdes_path[] = {2.500, 2.837, 3.679, 4.858, 5, -1}; // this needs work
+double ydes_path[] = {4.598, 4.382, 3.844, 3.090, 3, -1};
+double alpha = 0.2; // step size
+double decay = 0.001; // step size decay
+double tolerance = 0.1;
+
+double J[2][2]; // this is the Jacobian
+
+double t1_joint_path[MAX_SIZE];
+double t2_joint_path[MAX_SIZE];
+double x_path[MAX_SIZE];
+double y_path[MAX_SIZE]; 
+
+void setup() {
+  // put your setup code here, to run once:
+  midpoint = a + (b-a) / 2.0;
+
+  // Setup "desk" boundaries.
+  C1[0] = a - l1;
+  C1[1] = 0; // function of lis?
+  C2[0] = a - l1;
+  C2[1] = l1 + l2 + extra;
+  C3[0] = b + l4;
+  C3[1] = l3 + l4 + extra;
+  C4[0] = b + l4;
+  C4[1] = 0;
+
+  // Set initial conditions of end effector and joint angles.
+  x_cur = midpoint;
+  y_cur = l1 + sqrt(l2 * l2 - (midpoint - a) * (midpoint - a));
+  t1_cur = pi/2;
+  t2_cur = pi/2; // add description.
+
+  left_servo.attach(SERVO_PIN_LIFT);
+  right_servo.attach(SERVO_PIN_LEFT);
+  lift_servo.attach(SERVO_PIN_RIGHT);
 }
 
-void loop()
-{
+void compute_Jacobian(double x, double y, double t1, double t2) {
+  double J_00 = (-a + x - l1 * cos(t1)) / (l1 * (y * cos(t1) + a * sin(t1) - x * sin(t1)));
+  double J_01 = (y - l1 * sin(t1))/(l1 * (y * cos(t1) + a * sin(t1) - x * sin(t1)));
+  double J_10 = (-b + x - l4 * cos(t2)) / (l4 * (y * cos(t2) + b * sin(t2) - x * sin(t2)));
+  double J_11 = (y - l4 * sin(t2)) / (l4 * (y * cos(t2) + b * sin(t2) - x * sin(t2)));
+  J[0][0] = J_00;
+  J[0][1] = J_01;
+  J[1][0] = J_10;
+  J[1][1] = J_11;
+}
 
-#ifdef CALIBRATION
-  // Servohorns will have 90° between movements, parallel to x and y axis
-  drawTo(-3, 29.2);
-  delay(500);
-  drawTo(74.1, 28);
-  delay(500);
+// These two function do theta' = J*q'.
+double compute_dt1dt(double dxdt, double dydt) {
+  return J[0][0] * dxdt + J[0][1] * dydt;
+}
 
-#else
+double compute_dt2dt(double dxdt, double dydt) {
+  return J[1][0] * dxdt + J[1][1] * dydt;
+}
 
+double mag(double v1, double v2) {
+  // Returns the L2 norm of vector v = [v1, v2].
+  return sqrt(v1 * v1 + v2 * v2);
+}
 
+void move(double xdes, double ydes) {
+  double dt1dt;
+  double dt2dt;
+  
+  //init
   int i = 0;
-  if (last_min != minute()) {
+  t1_joint_path[i] = -1;
+  t2_joint_path[i] = -1;
 
-    if (!servo1.attached()) servo1.attach(SERVOPINLIFT);
-    if (!servo2.attached()) servo2.attach(SERVOPINLEFT);
-    if (!servo3.attached()) servo3.attach(SERVOPINRIGHT);
+  // loop
+  while (mag(xdes - x_cur, ydes - y_cur) > tolerance && i < MAX_SIZE) {
+      compute_Jacobian(x_cur, y_cur, t1_cur, t2_cur);
+      double dxdt = xdes - x_cur;
+      double dydt = ydes - y_cur;
 
-    lift(0);
+      double norm = mag(dxdt, dydt);
+      if (norm > 0.01) {
+          dxdt = dxdt/norm;
+          dydt = dydt/norm;
+      }
+      dt1dt = compute_dt1dt(dxdt, dydt);
+      dt2dt = compute_dt2dt(dxdt, dydt);
+      
+      t1_cur = t1_cur + alpha * dt1dt;
+      t2_cur = t2_cur + alpha * dt2dt;
 
-    hour();
-    while ((i + 1) * 10 <= hour())
-    {
-      i++;
+      // // // // // // // // // // // // // // //
+      // \\ // \\ // \\ // \\ // \\ // \\ // \\ //
+      // // // // // // // // // // // // // // //
+      
+      // move servos to t1_cur.
+      // writeMicroseconds: 1000 is fully counter-clockwise, 2000 is fully clockwise, and 1500 is in the middle.
+
+      double t1_scaled = t1_cur * 1000 / (2 * pi) + 1000;
+      double t2_scaled = t2_cur * 1000 / (2 * pi) + 1000;
+      left_servo.writeMicroseconds(t1_scaled);
+      right_servo.writeMicroseconds(t2_scaled);
+
+      // // // // // // // // // // // // // // //
+      // \\ // \\ // \\ // \\ // \\ // \\ // \\ //
+      // // // // // // // // // // // // // // //
+
+      t1_joint_path[i] = t1_cur; // use to debug.
+      t2_joint_path[i] = t2_cur;
+
+      x_cur = x_cur + alpha * dxdt;
+      y_cur = y_cur + alpha * dydt;
+      
+      x_path[i] = x_cur; // use to debug.
+      y_path[i] = y_cur;
+      
+      i += 1;
+
+      if(i % 100 == 0) {
+        alpha = alpha * (1 - decay);
+      }
     }
-    // erase 2x
-    number(3, 3, 111, 1);
-    number(3, 3, 111, 1);
-    // hour1
-    number(5, 25, i, 0.9);
-    // hour2
-    number(19, 25, (hour() - i * 10), 0.9);
-    // colon
-    number(28, 25, 11, 0.9);
+  
+  //joint_path list made completely
+  t1_joint_path[i] = -1;
+  t2_joint_path[i] = -1;
+  x_path[i] = -1;
+  y_path[i] = -1;
+}
 
-    i = 0;
-    while ((i + 1) * 10 <= minute())
-    {
-      i++;
+void loop() {  
+  // Comptued joint_path, which will be the input to servo (it's a sequence of joint angles) 
+  // Now, we will have a loop which incrementally updates the servo positions so that
+  // the end effector ends up at (xdes, ydes).
+
+  // loop through desired path and set servo angles accordingly.
+  double x_next;
+  double y_next;
+  if (xdes_path[path_index] != -1 && ydes_path[path_index] != -1) { // not done drawing path
+    printf("Current position @ path_index %d: %f, %f, %f, %f\n", path_index, x_cur, y_cur, t1_cur, t2_cur);
+    x_next = xdes_path[path_index];
+    y_next = ydes_path[path_index];
+    move(x_next, y_next);
+    path_index++;
+    if (xdes_path[path_index] == -1 || ydes_path[path_index] == -1) {
+      printf("Current position @ path_index %d: %f, %f, %f, %f\n", path_index, x_cur, y_cur, t1_cur, t2_cur);
+      lift_servo.detach();
+      left_servo.detach();
+      right_servo.detach();
+      exit(0);
     }
-    // minute1
-    number(34, 25, i, 0.9);
-    // minute2
-    number(48, 25, (minute() - i * 10), 0.9);
-    lift(2);
-    drawTo(PARKX, PARKY);
-    lift(1);
-    last_min = minute();
-
-    servo1.detach();
-    servo2.detach();
-    servo3.detach();
-  }
-
-#endif
-
-}
-
-// Writing numeral with bx by being the bottom left originpoint. Scale 1 equals a 20 mm high font.
-// The structure follows this principle: move to first startpoint of the numeral, lift down, draw numeral, lift up
-void number(float bx, float by, int num, float scale) {
-
-  switch (num) {
-
-    case 0:
-      drawTo(bx + 12 * scale, by + 6 * scale);
-      lift(0);
-      bogenGZS(bx + 7 * scale, by + 10 * scale, 10 * scale, -0.8, 6.7, 0.5);
-      lift(1);
-      break;
-    case 1:
-
-      drawTo(bx + 3 * scale, by + 15 * scale);
-      lift(0);
-      drawTo(bx + 10 * scale, by + 20 * scale);
-      drawTo(bx + 10 * scale, by + 0 * scale);
-      lift(1);
-      break;
-    case 2:
-      drawTo(bx + 2 * scale, by + 12 * scale);
-      lift(0);
-      bogenUZS(bx + 8 * scale, by + 14 * scale, 6 * scale, 3, -0.8, 1);
-      drawTo(bx + 1 * scale, by + 0 * scale);
-      drawTo(bx + 12 * scale, by + 0 * scale);
-      lift(1);
-      break;
-    case 3:
-      drawTo(bx + 2 * scale, by + 17 * scale);
-      lift(0);
-      bogenUZS(bx + 5 * scale, by + 15 * scale, 5 * scale, 3, -2, 1);
-      bogenUZS(bx + 5 * scale, by + 5 * scale, 5 * scale, 1.57, -3, 1);
-      lift(1);
-      break;
-    case 4:
-      drawTo(bx + 10 * scale, by + 0 * scale);
-      lift(0);
-      drawTo(bx + 10 * scale, by + 20 * scale);
-      drawTo(bx + 2 * scale, by + 6 * scale);
-      drawTo(bx + 12 * scale, by + 6 * scale);
-      lift(1);
-      break;
-    case 5:
-      drawTo(bx + 2 * scale, by + 5 * scale);
-      lift(0);
-      bogenGZS(bx + 5 * scale, by + 6 * scale, 6 * scale, -2.5, 2, 1);
-      drawTo(bx + 5 * scale, by + 20 * scale);
-      drawTo(bx + 12 * scale, by + 20 * scale);
-      lift(1);
-      break;
-    case 6:
-      drawTo(bx + 2 * scale, by + 10 * scale);
-      lift(0);
-      bogenUZS(bx + 7 * scale, by + 6 * scale, 6 * scale, 2, -4.4, 1);
-      drawTo(bx + 11 * scale, by + 20 * scale);
-      lift(1);
-      break;
-    case 7:
-      drawTo(bx + 2 * scale, by + 20 * scale);
-      lift(0);
-      drawTo(bx + 12 * scale, by + 20 * scale);
-      drawTo(bx + 2 * scale, by + 0);
-      lift(1);
-      break;
-    case 8:
-      drawTo(bx + 5 * scale, by + 10 * scale);
-      lift(0);
-      bogenUZS(bx + 5 * scale, by + 15 * scale, 5 * scale, 4.7, -1.6, 1);
-      bogenGZS(bx + 5 * scale, by + 5 * scale, 5 * scale, -4.7, 2, 1);
-      lift(1);
-      break;
-
-    case 9:
-      drawTo(bx + 9 * scale, by + 11 * scale);
-      lift(0);
-      bogenUZS(bx + 7 * scale, by + 15 * scale, 5 * scale, 4, -0.5, 1);
-      drawTo(bx + 5 * scale, by + 0);
-      lift(1);
-      break;
-
-    case 111:
-
-      lift(0);
-      drawTo(70, 46);
-      drawTo(ERASEMAXX, 43);
-
-      drawTo(ERASEMAXX, 49);
-      drawTo(5, 49);
-      drawTo(5, 45);
-      drawTo(ERASEMAXX, 45);
-      drawTo(ERASEMAXX, 40);
-
-      drawTo(5, 40);
-      drawTo(5, 35);
-      drawTo(ERASEMAXX, 35);
-      drawTo(ERASEMAXX, 30);
-
-      drawTo(5, 30);
-      drawTo(5, 25);
-      drawTo(ERASEMAXX, 25);
-      drawTo(ERASEMAXX, 20);
-
-      drawTo(5, 20);
-      drawTo(60, 44);
-
-      drawTo(PARKX, PARKY);
-      lift(2);
-
-      break;
-
-    case 11:
-      drawTo(bx + 5 * scale, by + 15 * scale);
-      lift(0);
-      bogenGZS(bx + 5 * scale, by + 15 * scale, 0.1 * scale, 1, -1, 1);
-      lift(1);
-      drawTo(bx + 5 * scale, by + 5 * scale);
-      lift(0);
-      bogenGZS(bx + 5 * scale, by + 5 * scale, 0.1 * scale, 1, -1, 1);
-      lift(1);
-      break;
-
   }
 }
 
-
-
-void lift(char lift) {
-  switch (lift) {
-    // room to optimize  !
-
-    case 0: //850
-
-      if (servoLift >= LIFT0) {
-        while (servoLift >= LIFT0)
-        {
-          servoLift--;
-          servo1.writeMicroseconds(servoLift);
-          delayMicroseconds(LIFTSPEED);
-        }
-      }
-      else {
-        while (servoLift <= LIFT0) {
-          servoLift++;
-          servo1.writeMicroseconds(servoLift);
-          delayMicroseconds(LIFTSPEED);
-
-        }
-
-      }
-
-      break;
-
-    case 1: //150
-
-      if (servoLift >= LIFT1) {
-        while (servoLift >= LIFT1) {
-          servoLift--;
-          servo1.writeMicroseconds(servoLift);
-          delayMicroseconds(LIFTSPEED);
-
-        }
-      }
-      else {
-        while (servoLift <= LIFT1) {
-          servoLift++;
-          servo1.writeMicroseconds(servoLift);
-          delayMicroseconds(LIFTSPEED);
-        }
-
-      }
-
-      break;
-
-    case 2:
-
-      if (servoLift >= LIFT2) {
-        while (servoLift >= LIFT2) {
-          servoLift--;
-          servo1.writeMicroseconds(servoLift);
-          delayMicroseconds(LIFTSPEED);
-        }
-      }
-      else {
-        while (servoLift <= LIFT2) {
-          servoLift++;
-          servo1.writeMicroseconds(servoLift);
-          delayMicroseconds(LIFTSPEED);
-        }
-      }
-      break;
-  }
+int main() {
+  setup();
+  while(1)
+    loop();
 }
-
-
-void bogenUZS(float bx, float by, float radius, int start, int ende, float sqee) {
-  float inkr = -0.05;
-  float count = 0;
-
-  do {
-    drawTo(sqee * radius * cos(start + count) + bx,
-           radius * sin(start + count) + by);
-    count += inkr;
-  }
-  while ((start + count) > ende);
-
-}
-
-void bogenGZS(float bx, float by, float radius, int start, int ende, float sqee) {
-  float inkr = 0.05;
-  float count = 0;
-
-  do {
-    drawTo(sqee * radius * cos(start + count) + bx,
-           radius * sin(start + count) + by);
-    count += inkr;
-  }
-  while ((start + count) <= ende);
-}
-
-
-void drawTo(double pX, double pY) {
-  double dx, dy, c;
-  int i;
-
-  // dx dy of new point
-  dx = pX - lastX;
-  dy = pY - lastY;
-  // path length in mm * 4 = 4 steps per mm
-  c = floor(4 * sqrt(dx * dx + dy * dy));  // Approx arc length in mm is sqrt(dx * dx + dy * dy). Number of servo steps is 4 * (# mm). c gives us number of servo steps to new point.
-
-  if (c < 1) c = 1;
-
-  for (i = 0; i <= c; i++) { // for each servo step in arc length
-    // draw line point by point
-    set_XY(lastX + (i * dx / c), lastY + (i * dy / c));
-  }
-  lastX = pX;
-  lastY = pY;
-}
-
-double return_angle(double a, double b, double c) {
-  // cosine rule for angle between c and a
-  return acos((a * a + c * c - b * b) / (2 * a * c));
-}
-
-void set_XY(double Tx, double Ty)
-{
-  delay(1);
-  double dx, dy, c, a1, a2, Hx, Hy;
-
-  // calculate triangle between pen, servoLeft and arm joint (servo-left joint angle)
-  // cartesian dx/dy
-  dx = Tx - O1X;
-  dy = Ty - O1Y;
-
-  // polar length (c) and angle (a1)
-  c = sqrt(dx * dx + dy * dy); //
-  a1 = atan2(dy, dx); // (angle on surface)
-  a2 = return_angle(L1, L2, c);
-
-  servo2.writeMicroseconds(floor(((a2 + a1 - M_PI) * SERVOFAKTORLEFT) + SERVOLEFTNULL));
-
-  // calculate joint arm point for triangle of the right servo arm
-  a2 = return_angle(L2, L1, c);
-  Hx = Tx + L3 * cos((a1 - a2 + 0.621) + M_PI); //36,5°
-  Hy = Ty + L3 * sin((a1 - a2 + 0.621) + M_PI);
-
-  // calculate triangle between pen joint, servoRight and arm joint
-  dx = Hx - O2X;
-  dy = Hy - O2Y;
-
-  c = sqrt(dx * dx + dy * dy);
-  a1 = atan2(dy, dx);
-  a2 = return_angle(L1, (L2 - L3), c);
-
-  servo3.writeMicroseconds(floor(((a1 - a2) * SERVOFAKTORRIGHT) + SERVORIGHTNULL));
-
-}
-
-
