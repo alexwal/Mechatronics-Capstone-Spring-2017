@@ -68,9 +68,9 @@ double C3[2];
 double C4[2];
 
 // Initialize servos.
-Servo left_servo;
-Servo right_servo;
-Servo lift_servo;
+Servo left_servo;   // 0 @ 600, 180 @ 2300
+Servo right_servo;  // 0 @ 550, 180 @ 2250
+Servo lift_servo;   // 
 
 // Store current angle location and (estimate of) tool position.
 double x_cur;
