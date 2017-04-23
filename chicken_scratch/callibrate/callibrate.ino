@@ -58,7 +58,7 @@ double l1 = 36; // | [A] - [L] |
 double l2 = 45; // | [q] - [A] |
 double l3 = 45; // | [q] - [B] |
 double l4 = 36; // | [B] - [R] |
-double midpoint; //= a + (b-a) / 2.0;
+double midpoint; // = a + (b-a) / 2.0;
 //assert l2 + l3 > midpoint, 'impossible dimensions: arms disconnected!'
 
 // Corners of end effector space. See diagram.
@@ -83,34 +83,11 @@ double left_servo_0 = 700;
 double left_servo_180 = 2440;
 double right_servo_0 = 650;
 double right_servo_180 = 2050;
-
 double lift_servo_write = 1450; //between 1450-1500 depending on pen length
 double lift_servo_pause = 700;
 
-
 // // // // // // // // // // // // // // // // // // // // // // // // 
 // // // // // // // // // // // // // // // // // // // // // // // // 
-
-// Store current angle location and (estimate of) tool position.
-double x_cur;
-double y_cur;
-double t1_cur;
-double t2_cur;
-
-// Path tuning parameters (see move(...))
-int path_index = 0;
-double xdes_path[] = {2.500, 2.837, 3.679, 4.858, 5, -1}; // this needs work
-double ydes_path[] = {4.598, 4.382, 3.844, 3.090, 3, -1};
-double step_size = 0.2; // initial value of alpha in move(...)
-double decay = 0.001; // step size decay
-double tolerance = 0.1;
-
-// We update these arrays as we move the robot.
-double J[2][2]; // this is the Jacobian
-double t1_joint_path[MAX_SIZE];
-double t2_joint_path[MAX_SIZE];
-double x_path[MAX_SIZE];
-double y_path[MAX_SIZE]; 
 
 double left_rad_to_joint_angle(double rad) {
    return left_servo_0 + rad * (left_servo_180 - left_servo_0) / pi;
@@ -134,10 +111,10 @@ void setup() {
 
   // Set initial conditions of end effector and joint angles.
   midpoint = a + (b-a) / 2.0;
-  x_cur = midpoint;
-  y_cur = l1 + sqrt(l2 * l2 - (midpoint - a) * (midpoint - a));
-  t1_cur = pi/2;
-  t2_cur = pi/2; // add description.
+  double x_cur = midpoint;
+  double y_cur = l1 + sqrt(l2 * l2 - (midpoint - a) * (midpoint - a));
+  double t1_cur = pi/2;
+  double t2_cur = pi/2; // add description.
 
   // Attach servos to pins.
   left_servo.attach(SERVO_PIN_LEFT);

@@ -51,7 +51,7 @@
 #define SERVO_PIN_LEFT  9
 #define SERVO_PIN_RIGHT 13
 
-// Fixed robot parameters. (units?) mm
+// Fixed robot parameters. (units: millimeters)
 double a = 0; // See diagram.
 double b = 47; // See diagram. 
 double l1 = 36; // | [A] - [L] |
