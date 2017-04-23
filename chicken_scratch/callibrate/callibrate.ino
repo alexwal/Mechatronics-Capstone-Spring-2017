@@ -80,9 +80,13 @@ Servo lift_servo;
 // IMPORTANT: Callibrate by ONLY attaching first robot arm link to servos. (not whole tool)
 
 double left_servo_0 = 700;
-double left_servo_180 = 2400;
-double right_servo_0 = 600;
-double right_servo_180 = 2320;
+double left_servo_180 = 2440;
+double right_servo_0 = 650;
+double right_servo_180 = 2050;
+
+double lift_servo_write = 1450; //between 1450-1500 depending on pen length
+double lift_servo_pause = 700;
+
 
 // // // // // // // // // // // // // // // // // // // // // // // // 
 // // // // // // // // // // // // // // // // // // // // // // // // 
@@ -140,22 +144,6 @@ void setup() {
   right_servo.attach(SERVO_PIN_RIGHT);
   lift_servo.attach(SERVO_PIN_LIFT);
 
-  // // // // // // // // // // // // // // // // // // // // // // // // 
-  // // // // // // // // // // // // // // // // // // // // // // // // 
-
-  // TUNE zeros and 180s here.
-//  while(1) {
-//    left_servo.writeMicroseconds(left_servo_0); // RECORD RANGES ABOVE!
-//    right_servo.writeMicroseconds(right_servo_0); // RECORD RANGES ABOVE!
-//    delay(3000);
-//    left_servo.writeMicroseconds(left_servo_180); // RECORD RANGES ABOVE!
-//    right_servo.writeMicroseconds(right_servo_180); // RECORD RANGES ABOVE!
-//    delay(3000);
-//  }
-
-  // // // // // // // // // // // // // // // // // // // // // // // // 
-  // // // // // // // // // // // // // // // // // // // // // // // // 
-
   double rad = pi / 2;
   double left_us   =   left_rad_to_joint_angle(rad);
   double right_us  =   right_rad_to_joint_angle(rad);
@@ -166,28 +154,45 @@ void setup() {
   Serial.println(left_us);
   Serial.println("right_us");
   Serial.println(right_us);
-
-  while(1) {
-    // Go to 0
-    left_servo.writeMicroseconds(left_servo_0); // RECORD RANGES ABOVE!
-    right_servo.writeMicroseconds(right_servo_0); // RECORD RANGES ABOVE!
-    delay(2000);
-
     // Go to 'deg'
     left_servo.writeMicroseconds(left_us); // RECORD RANGES ABOVE!
     right_servo.writeMicroseconds(right_us); // RECORD RANGES ABOVE!
     delay(2000);
 
+
+  // // // // // // // // // // // // // // // // // // // // // // // // 
+  // // // // // // // // // // // // // // // // // // // // // // // //
+//  while(1) {
+//    // Go to 0
+//    //left_servo.writeMicroseconds(left_servo_0); // RECORD RANGES ABOVE!
+//    right_servo.writeMicroseconds(right_servo_0); // RECORD RANGES ABOVE!
+//    delay(2000);
+//
+//    // Go to 'deg'
+//    //left_servo.writeMicroseconds(left_us); // RECORD RANGES ABOVE!
+//    right_servo.writeMicroseconds(right_us); // RECORD RANGES ABOVE!
+//    delay(2000);
+//
+//    // Got to 180
+//    //left_servo.writeMicroseconds(left_servo_180); // RECORD RANGES ABOVE!
+//    right_servo.writeMicroseconds(right_servo_180); // RECORD RANGES ABOVE!
+//    delay(2000);
+//  }
+
+  while(1) {
+    // Go to 'deg'
+      lift_servo.writeMicroseconds(lift_servo_write); // RECORD RANGES ABOVE!
+      delay(2000);
+
     // Got to 180
-    left_servo.writeMicroseconds(left_servo_180); // RECORD RANGES ABOVE!
-    right_servo.writeMicroseconds(right_servo_180); // RECORD RANGES ABOVE!
+    lift_servo.writeMicroseconds(lift_servo_pause); // RECORD RANGES ABOVE!
     delay(2000);
+    
   }
 
-  
-
   // // // // // // // // // // // // // // // // // // // // // // // // 
   // // // // // // // // // // // // // // // // // // // // // // // // 
+   
 }
 
 void loop() {
