@@ -48,16 +48,16 @@
 #define pi 3.1415926536
 
 #define SERVO_PIN_LIFT  11
-#define SERVO_PIN_LEFT  12
+#define SERVO_PIN_LEFT  9
 #define SERVO_PIN_RIGHT 13
 
-// Fixed robot parameters. (units?)
-double a = 1; // See diagram.
-double b = 4; // See diagram. 
-double l1 = 2; // | [A] - [L] |
-double l2 = 3; // | [q] - [A] |
-double l3 = 3; // | [q] - [B] |
-double l4 = 2; // | [B] - [R] |
+// Fixed robot parameters. (units?) mm
+double a = 0; // See diagram.
+double b = 47; // See diagram. 
+double l1 = 36; // | [A] - [L] |
+double l2 = 45; // | [q] - [A] |
+double l3 = 45; // | [q] - [B] |
+double l4 = 36; // | [B] - [R] |
 double midpoint; //= a + (b-a) / 2.0;
 //assert l2 + l3 > midpoint, 'impossible dimensions: arms disconnected!'
 
@@ -68,9 +68,26 @@ double C3[2];
 double C4[2];
 
 // Initialize servos.
-Servo left_servo;   // 0 @ 600, 180 @ 2300
-Servo right_servo;  // 0 @ 550, 180 @ 2250
-Servo lift_servo;   // 
+Servo left_servo;
+Servo right_servo;
+Servo lift_servo;
+
+// // // // // // // // // // // // // // // // // // // // // // // // 
+// // // // // // // // // // // // // // // // // // // // // // // // 
+
+// Use callibrate.ino to set the zero and 180 degree range.
+// At 0 degrees, both servos point right horizontal, and at 180 degrees, servos rotate ccw to left horizontal.
+// IMPORTANT: Callibrate by ONLY attaching first robot arm link to servos. (not whole tool)
+
+double left_servo_0 = 700;
+double left_servo_180 = 2440;
+double right_servo_0 = 650;
+double right_servo_180 = 2050;
+double lift_servo_write = 1450; //between 1450-1500 depending on pen length
+double lift_servo_pause = 700;
+
+// // // // // // // // // // // // // // // // // // // // // // // // 
+// // // // // // // // // // // // // // // // // // // // // // // // 
 
 // Store current angle location and (estimate of) tool position.
 double x_cur;
@@ -92,6 +109,14 @@ double t1_joint_path[MAX_SIZE];
 double t2_joint_path[MAX_SIZE];
 double x_path[MAX_SIZE];
 double y_path[MAX_SIZE]; 
+
+double left_rad_to_joint_angle(double rad) {
+   return left_servo_0 + rad * (left_servo_180 - left_servo_0) / pi;
+}
+
+double right_rad_to_joint_angle(double rad) {
+      return right_servo_0 + rad * (right_servo_180 - right_servo_0) / pi;
+} 
 
 void setup() {
   // Setup "desk" boundaries.
@@ -184,14 +209,13 @@ void move(double xdes, double ydes) {
       // \\ // \\ // \\ // \\ // \\ // \\ // \\ //
       // // // // // // // // // // // // // // //
       
-      // Move servos to current t1, t2.
-      // servo.writeMicroseconds(uS): 1000 is fully counter-clockwise, 2000 is fully clockwise, and 1500 is in the middle.
+      // Move servos to current t1, t2, first, converting t1, t2 to `us`, domain of writeMicroseconds.
+      // NOTE: servo.writeMicroseconds(uS): 1000 is fully counter-clockwise, 2000 is fully clockwise, and 1500 is in the middle.
+      double t1_us    =   left_rad_to_joint_angle(t1_cur);
+      double t2_us    =   right_rad_to_joint_angle(t2_cur);
 
-      // Scale t1, t2 to domain of writeMicroseconds.
-      double t1_scaled = t1_cur * 1000 / (2 * pi) + 1000;
-      double t2_scaled = t2_cur * 1000 / (2 * pi) + 1000;
-      left_servo.writeMicroseconds(t1_scaled);
-      right_servo.writeMicroseconds(t2_scaled);
+      left_servo.writeMicroseconds(t1_us);
+      right_servo.writeMicroseconds(t2_us);
 
       // // // // // // // // // // // // // // //
       // \\ // \\ // \\ // \\ // \\ // \\ // \\ //

@@ -154,14 +154,16 @@ void setup() {
   Serial.println(left_us);
   Serial.println("right_us");
   Serial.println(right_us);
-    // Go to 'deg'
-    left_servo.writeMicroseconds(left_us); // RECORD RANGES ABOVE!
-    right_servo.writeMicroseconds(right_us); // RECORD RANGES ABOVE!
-    delay(2000);
 
+  left_servo.writeMicroseconds(left_us); // RECORD RANGES ABOVE!
+  right_servo.writeMicroseconds(right_us); // RECORD RANGES ABOVE!
+  delay(2000);
 
   // // // // // // // // // // // // // // // // // // // // // // // // 
   // // // // // // // // // // // // // // // // // // // // // // // //
+
+// Callibrate left and right servos.
+
 //  while(1) {
 //    // Go to 0
 //    //left_servo.writeMicroseconds(left_servo_0); // RECORD RANGES ABOVE!
@@ -179,15 +181,14 @@ void setup() {
 //    delay(2000);
 //  }
 
-  while(1) {
-    // Go to 'deg'
-      lift_servo.writeMicroseconds(lift_servo_write); // RECORD RANGES ABOVE!
-      delay(2000);
+// Callibrate lift servo.
 
-    // Got to 180
+  while(1) {
+    lift_servo.writeMicroseconds(lift_servo_write); // RECORD RANGES ABOVE!
+    delay(2000);
+
     lift_servo.writeMicroseconds(lift_servo_pause); // RECORD RANGES ABOVE!
     delay(2000);
-    
   }
 
   // // // // // // // // // // // // // // // // // // // // // // // // 
