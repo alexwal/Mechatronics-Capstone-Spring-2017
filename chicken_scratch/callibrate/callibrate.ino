@@ -51,13 +51,13 @@
 #define SERVO_PIN_LEFT  9
 #define SERVO_PIN_RIGHT 13
 
-// Fixed robot parameters. (units?)
-double a = 1; // See diagram.
-double b = 4; // See diagram. 
-double l1 = 2; // | [A] - [L] |
-double l2 = 3; // | [q] - [A] |
-double l3 = 3; // | [q] - [B] |
-double l4 = 2; // | [B] - [R] |
+// Fixed robot parameters. (units?) mm
+double a = 0; // See diagram.
+double b = 47; // See diagram. 
+double l1 = 36; // | [A] - [L] |
+double l2 = 45; // | [q] - [A] |
+double l3 = 45; // | [q] - [B] |
+double l4 = 36; // | [B] - [R] |
 double midpoint; //= a + (b-a) / 2.0;
 //assert l2 + l3 > midpoint, 'impossible dimensions: arms disconnected!'
 
@@ -77,9 +77,9 @@ Servo lift_servo;
 
 // Use callibrate.ino to set the zero and 180 degree range.
 // At 0 degrees, both servos point right horizontal, and at 180 degrees, servos rotate ccw to left horizontal.
-// Callibrate by ONLY attaching first robot arm link to servos. (not whole tool)
+// IMPORTANT: Callibrate by ONLY attaching first robot arm link to servos. (not whole tool)
 
-double left_servo_0 = 710;
+double left_servo_0 = 700;
 double left_servo_180 = 2400;
 double right_servo_0 = 600;
 double right_servo_180 = 2320;
@@ -108,6 +108,14 @@ double t2_joint_path[MAX_SIZE];
 double x_path[MAX_SIZE];
 double y_path[MAX_SIZE]; 
 
+double left_rad_to_joint_angle(double rad) {
+   return left_servo_0 + rad * (left_servo_180 - left_servo_0) / pi;
+}
+
+double right_rad_to_joint_angle(double rad) {
+      return right_servo_0 + rad * (right_servo_180 - right_servo_0) / pi;
+}
+
 void setup() {
   // Setup "desk" boundaries.
   double extra = 1;
@@ -132,30 +140,51 @@ void setup() {
   right_servo.attach(SERVO_PIN_RIGHT);
   lift_servo.attach(SERVO_PIN_LIFT);
 
-//  double t1_scaled = t1_cur * 1000 / (2 * pi) + 1000;
-//  double t2_scaled = t2_cur * 1000 / (2 * pi) + 1000;
-
   // // // // // // // // // // // // // // // // // // // // // // // // 
   // // // // // // // // // // // // // // // // // // // // // // // // 
 
   // TUNE zeros and 180s here.
-//  left_servo.writeMicroseconds(left_servo_0); // RECORD RANGES ABOVE!
-//  right_servo.writeMicroseconds(right_servo_0); // RECORD RANGES ABOVE!
-//  delay(3000);
+//  while(1) {
+//    left_servo.writeMicroseconds(left_servo_0); // RECORD RANGES ABOVE!
+//    right_servo.writeMicroseconds(right_servo_0); // RECORD RANGES ABOVE!
+//    delay(3000);
+//    left_servo.writeMicroseconds(left_servo_180); // RECORD RANGES ABOVE!
+//    right_servo.writeMicroseconds(right_servo_180); // RECORD RANGES ABOVE!
+//    delay(3000);
+//  }
 
-  // NOTE:  map(value, fromLow, fromHigh, toLow, toHigh);
-  // NOTE2: max value of input angle is pi = 180 deg. That explains the from range in map below!
-  float deg = 90;
-  float left_us   =   map(deg * (pi / 180.0),   0,  pi,  left_servo_0,   left_servo_180);
-  float right_us  =   map(deg * (pi / 180.0),   0,  pi,  right_servo_0,  right_servo_180);
+  // // // // // // // // // // // // // // // // // // // // // // // // 
+  // // // // // // // // // // // // // // // // // // // // // // // // 
+
+  double rad = pi / 2;
+  double left_us   =   left_rad_to_joint_angle(rad);
+  double right_us  =   right_rad_to_joint_angle(rad);
+  
   Serial.begin(9600);
-  Serial.println(deg);
+  Serial.println(rad);
+  Serial.println("left_us");
   Serial.println(left_us);
+  Serial.println("right_us");
   Serial.println(right_us);
 
+  while(1) {
+    // Go to 0
+    left_servo.writeMicroseconds(left_servo_0); // RECORD RANGES ABOVE!
+    right_servo.writeMicroseconds(right_servo_0); // RECORD RANGES ABOVE!
+    delay(2000);
+
+    // Go to 'deg'
+    left_servo.writeMicroseconds(left_us); // RECORD RANGES ABOVE!
+    right_servo.writeMicroseconds(right_us); // RECORD RANGES ABOVE!
+    delay(2000);
+
+    // Got to 180
+    left_servo.writeMicroseconds(left_servo_180); // RECORD RANGES ABOVE!
+    right_servo.writeMicroseconds(right_servo_180); // RECORD RANGES ABOVE!
+    delay(2000);
+  }
+
   
-  left_servo.writeMicroseconds(left_us); // RECORD RANGES ABOVE!
-  right_servo.writeMicroseconds(right_us); // RECORD RANGES ABOVE!
 
   // // // // // // // // // // // // // // // // // // // // // // // // 
   // // // // // // // // // // // // // // // // // // // // // // // // 
