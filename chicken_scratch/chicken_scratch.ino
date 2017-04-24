@@ -39,12 +39,11 @@
            ...                    ...
           [C1]      [L]   [R]     [C4]
 */
-#include <stdlib.h>
-#include <stdio.h>
 #include <math.h>
 #include <Servo.h>
 
-#define MAX_SIZE 50
+//#define MAX_SIZE 50
+#define MAX_MOVES 100
 #define pi 3.1415926536
 
 #define X_HOME 23.50 // pen x starting point (MAYBE don't want hard coded)
@@ -85,7 +84,7 @@ Servo lift_servo;
 float left_servo_0 = 700;
 float left_servo_180 = 2440;
 float right_servo_0 = 650;
-float right_servo_180 = 2050;
+float right_servo_180 = 2150;
 float lift_servo_write = 1450; //between 1450-1500 depending on pen length
 float lift_servo_pause = 700;
 
@@ -98,20 +97,29 @@ float y_cur;
 float t1_cur;
 float t2_cur;
 
-// Path tuning parameters (see move(...))          Move links to as close as 90 degrees as possible.
+// Path tuning parameters (see move(...))         Move links to as close as 90 degrees as possible.
 int path_index = 0;
-float xdes_path[] = {X_HOME, 40, X_HOME, -1}; //          Paths must start out at:   23.5 (midpoint), 74.38 (corresponding y)
-float ydes_path[] = {Y_HOME, Y_HOME, Y_HOME, -1};                               
-float step_size = 0.2; // initial value of alpha in move(...)
+
+// Create path(s).
+// Paths must start out at:   23.5 (midpoint), 74.38 (corresponding y).
+//||\\||//||\\||//||\\||//||\\||//||\\||//||\\||//||\\||//||\\||//||\\||//||\\||//
+//|\\||//||\\||//||\\||//||\\||//||\\||//||\\||//||\\||//||\\||//||\\||//||\\||//|
+
+// -15 is xmin, 65 is xmax.
+// 20 is ymin, y_home is ymax.
+
+float xdes_path[] = {X_HOME, 36.5, 35.8637347118, 34.0172209269, 31.1412082798, 27.5172209269, 23.5, 19.4827790731, 15.8587917202, 12.9827790731, 11.1362652882, 10.5, 11.1362652882, 12.9827790731, 15.8587917202, 19.4827790731, 23.5, 27.5172209269, 31.1412082798, 34.0172209269, 35.8637347118, 36.5, X_HOME, -1};
+float ydes_path[] = {Y_HOME, 59.38, 63.3972209269, 67.0212082798, 69.8972209269, 71.7437347118, 72.38, 71.7437347118, 69.8972209269, 67.0212082798, 63.3972209269, 59.38, 55.3627790731, 51.7387917202, 48.8627790731, 47.0162652882, 46.38, 47.0162652882, 48.8627790731, 51.7387917202, 55.3627790731, 59.38, Y_HOME, -1};
+
+//||\\||//||\\||//||\\||//||\\||//||\\||//||\\||//||\\||//||\\||//||\\||//||\\||//
+//|\\||//||\\||//||\\||//||\\||//||\\||//||\\||//||\\||//||\\||//||\\||//||\\||//|
+
+float step_size = 0.8; // initial value of alpha in move(...)
 float decay = 0.001; // step size decay
-float tolerance = 0.1;
+float tolerance = 0.4;
 
 // We update these arrays as we move the robot.
 float J[2][2]; // this is the Jacobian
-float t1_joint_path[MAX_SIZE];
-float t2_joint_path[MAX_SIZE];
-float x_path[MAX_SIZE];
-float y_path[MAX_SIZE]; 
 
 float left_rad_to_joint_angle(float rad) {
    return left_servo_0 + rad * (left_servo_180 - left_servo_0) / pi;
@@ -155,7 +163,12 @@ void setup() {
   left_servo.writeMicroseconds(t1_us);
   right_servo.writeMicroseconds(t2_us);
 
-  delay(1000);
+  timeLoop(millis(), 1000);
+}
+
+void timeLoop (long int startMillis, long int interval){ // the delay function
+    // this loops until milliseconds has passed since the function began
+    while(millis() - startMillis < interval){} 
 }
 
 // Used in finding: theta' = J * q', the required nudge of angles to get
@@ -196,10 +209,9 @@ float mag(float v1, float v2) {
 void move(float xdes, float ydes) {
   float alpha = step_size;
   int i = 0;
-  t1_joint_path[i] = -1;
-  t2_joint_path[i] = -1;
-  while (mag(xdes - x_cur, ydes - y_cur) > tolerance && i < MAX_SIZE) {
+  while (mag(xdes - x_cur, ydes - y_cur) > tolerance && i < MAX_MOVES) {
       Serial.println("[MOVE] Current position @ iteration " + String(i) + ", x_cur: " + String(x_cur, 2) + ", y_cur: " + String(y_cur, 2) + ", t1_cur: " + String(t1_cur, 2) + ", t2_cur: " + String(t2_cur, 2));
+      timeLoop(millis(), 50);
       
       // The Jacobian is the exact approximation of our dynamics at the current state.
       // We use it to approximate the correct movement of joint angles that will 
@@ -241,15 +253,9 @@ void move(float xdes, float ydes) {
       // \\ // \\ // \\ // \\ // \\ // \\ // \\ //
       // // // // // // // // // // // // // // //
 
-      t1_joint_path[i] = t1_cur; // use path to debug.
-      t2_joint_path[i] = t2_cur;
-
       // Update current tool position estimate.
       x_cur = x_cur + alpha * dxdt;
       y_cur = y_cur + alpha * dydt;
-      
-      x_path[i] = x_cur; // use path to debug.
-      y_path[i] = y_cur;
       
       // Increment iterations.
       i += 1;
@@ -259,12 +265,17 @@ void move(float xdes, float ydes) {
       }
     }
 
+  // This means that the number of moves to go between two points on our path
+  // was too high for our comfort. This path will have to be modified so that
+  // points are closer, or MAX_MOVES increased.
+//  if (i >= MAX_MOVES) { // maybe increment path index in here if successful (after loop)
+//    Serial.println("MAX_MOVES EXCEEDED!!! Exiting...");
+//    Serial.flush();
+//    exit(0);
+//  }
+
   // Done moving servos along joint path. 
-//  return_pen_to_home();
-  t1_joint_path[i] = -1;
-  t2_joint_path[i] = -1;
-  x_path[i] = -1;
-  y_path[i] = -1;
+  // return_pen_to_home();
 }
 
 void loop2() {}
@@ -273,15 +284,14 @@ void loop() {
   // Comptued joint_path, which will be the input to servo (it's a sequence of joint angles) 
   // Now, we will have a loop which incrementally updates the servo positions so that
   // the end effector ends up at (xdes, ydes).
-
-  char buffer[100];
-
-
+  
   // Loop through desired end effector path and set servo angles accordingly and at small enough steps.
   float x_next;
   float y_next;
   if (xdes_path[path_index] != -1 && ydes_path[path_index] != -1) { // not done drawing path
     Serial.println("[LOOP] Current position @ path_index " + String(path_index) + ", x_cur: " + String(x_cur, 2) + ", y_cur: " + String(y_cur, 2) + ", t1_cur: " + String(t1_cur, 2) + ", t2_cur: " + String(t2_cur, 2));
+    timeLoop(millis(), 100);
+    
     // Grab the next point from desired path.
     x_next = xdes_path[path_index];
     y_next = ydes_path[path_index];
@@ -295,9 +305,12 @@ void loop() {
     // Exit if done drawing desired path.
     if (xdes_path[path_index] == -1 || ydes_path[path_index] == -1) {
       Serial.println("[LOOP] Final position @ path_index " + String(path_index) + ", x_cur: " + String(x_cur, 2) + ", y_cur: " + String(y_cur, 2) + ", t1_cur: " + String(t1_cur, 2) + ", t2_cur: " + String(t2_cur, 2));
-//      left_servo.detach();
-//      right_servo.detach();
-//      exit(0);
+      timeLoop(millis(), 1000);
+      Serial.flush();
+      timeLoop(millis(), 3000);
+      left_servo.detach();
+      right_servo.detach();
+      exit(0);
     }
   }
 }

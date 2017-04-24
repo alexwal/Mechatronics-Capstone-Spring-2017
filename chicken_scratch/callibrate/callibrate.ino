@@ -82,7 +82,7 @@ Servo lift_servo;
 double left_servo_0 = 700;
 double left_servo_180 = 2440;
 double right_servo_0 = 650;
-double right_servo_180 = 2050;
+double right_servo_180 = 2150;
 double lift_servo_write = 1450; //between 1450-1500 depending on pen length
 double lift_servo_pause = 700;
 
@@ -141,32 +141,32 @@ void setup() {
 
 // Callibrate left and right servos.
 
-//  while(1) {
-//    // Go to 0
-//    //left_servo.writeMicroseconds(left_servo_0); // RECORD RANGES ABOVE!
-//    right_servo.writeMicroseconds(right_servo_0); // RECORD RANGES ABOVE!
-//    delay(2000);
-//
-//    // Go to 'deg'
-//    //left_servo.writeMicroseconds(left_us); // RECORD RANGES ABOVE!
-//    right_servo.writeMicroseconds(right_us); // RECORD RANGES ABOVE!
-//    delay(2000);
-//
-//    // Got to 180
-//    //left_servo.writeMicroseconds(left_servo_180); // RECORD RANGES ABOVE!
-//    right_servo.writeMicroseconds(right_servo_180); // RECORD RANGES ABOVE!
-//    delay(2000);
-//  }
+  while(1) {
+    // Go to 0
+    left_servo.writeMicroseconds(left_servo_0); // RECORD RANGES ABOVE!
+    right_servo.writeMicroseconds(right_servo_0); // RECORD RANGES ABOVE!
+    delay(2000);
+
+    // Go to 'deg'
+    left_servo.writeMicroseconds(left_us); // RECORD RANGES ABOVE!
+    right_servo.writeMicroseconds(right_us); // RECORD RANGES ABOVE!
+    delay(2000);
+
+    // Got to 180
+    left_servo.writeMicroseconds(left_servo_180); // RECORD RANGES ABOVE!
+    right_servo.writeMicroseconds(right_servo_180); // RECORD RANGES ABOVE!
+    delay(2000);
+  }
 
 // Callibrate lift servo.
 
-  while(1) {
-    lift_servo.writeMicroseconds(lift_servo_write); // RECORD RANGES ABOVE!
-    delay(2000);
-
-    lift_servo.writeMicroseconds(lift_servo_pause); // RECORD RANGES ABOVE!
-    delay(2000);
-  }
+//  while(1) {
+//    lift_servo.writeMicroseconds(lift_servo_write); // RECORD RANGES ABOVE!
+//    delay(2000);
+//
+//    lift_servo.writeMicroseconds(lift_servo_pause); // RECORD RANGES ABOVE!
+//    delay(2000);
+//  }
 
   // // // // // // // // // // // // // // // // // // // // // // // // 
   // // // // // // // // // // // // // // // // // // // // // // // // 
