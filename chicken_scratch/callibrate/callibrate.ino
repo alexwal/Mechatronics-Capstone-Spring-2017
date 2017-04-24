@@ -48,7 +48,7 @@
 #define pi 3.1415926536
 
 #define SERVO_PIN_LIFT  11
-#define SERVO_PIN_LEFT  9
+#define SERVO_PIN_LEFT  6
 #define SERVO_PIN_RIGHT 13
 
 // Fixed robot parameters. (units?) mm
@@ -143,17 +143,17 @@ void setup() {
 
   while(1) {
     // Go to 0
-    left_servo.writeMicroseconds(left_servo_0); // RECORD RANGES ABOVE!
+    //left_servo.writeMicroseconds(left_servo_0); // RECORD RANGES ABOVE!
     right_servo.writeMicroseconds(right_servo_0); // RECORD RANGES ABOVE!
     delay(2000);
 
     // Go to 'deg'
-    left_servo.writeMicroseconds(left_us); // RECORD RANGES ABOVE!
+    //left_servo.writeMicroseconds(left_us); // RECORD RANGES ABOVE!
     right_servo.writeMicroseconds(right_us); // RECORD RANGES ABOVE!
     delay(2000);
 
     // Got to 180
-    left_servo.writeMicroseconds(left_servo_180); // RECORD RANGES ABOVE!
+    //left_servo.writeMicroseconds(left_servo_180); // RECORD RANGES ABOVE!
     right_servo.writeMicroseconds(right_servo_180); // RECORD RANGES ABOVE!
     delay(2000);
   }

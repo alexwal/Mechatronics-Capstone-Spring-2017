@@ -278,9 +278,83 @@ void move(float xdes, float ydes) {
   // return_pen_to_home();
 }
 
-void loop2() {}
 
+//Draw on the fly without saving paths in arrays
+
+//////////////////////////////////////////////////////
+void pen_down() {
+  // Pen down.
+  lift_servo.writeMicroseconds(lift_servo_write);
+}
+
+void pen_up() {
+  // Pen up.
+  lift_servo.writeMicroseconds(lift_servo_pause);
+}
+
+// Draw a CCW arc originating from x, y with radius r, origin x0, y0.
+void arc(float x0, float y0, float x, float y, float theta){
+        pen_up();
+        //move to x, y --> the poit from which the arc will begin
+        move(x, y);
+        pen_down();
+        //initalize vars
+        float n = 20.0; //number of delta theta steps to take to draw arc
+        float del_theta = theta/n;
+        float x_cur = x;
+        float y_cur = y;
+        // this loop moves the arc along for n iterations
+        int i = 0;
+        while (i < n) {
+          //shift x1, y1 so that it is with respect to (0,0) origin
+          float x_shifted = x_cur - x0;
+          float y_shifted = y_cur = y0;
+
+          //rotate the the shifted point del_theta radians
+          float x_rot = x_shifted * cos(del_theta) - y_shifted * sin(del_theta);
+          float y_rot = x_shifted * sin(del_theta) + y_shifted * cos(del_theta);
+
+          //shift point back to original origin (x0, y0)
+          float x_rot_shifted = x_rot + x0;
+          float y_rot_shifted = y_rot + y0;
+
+          //actually do the move to the intermediate point
+          move(x_rot_shifted, y_rot_shifted);
+
+          x_cur = x_rot_shifted;
+          y_cur = y_rot_shifted;
+          i++; 
+        }
+        pen_up();
+}
+
+void line(float x0, float y0, float x1, float y1){
+        // Draw a line.
+        move(x0, y0);
+        pen_down();
+        move(x1, y1);
+        pen_up();
+}
+
+//void write_a() {
+//}
+//etc...etc..
+
+
+//////////////////////////////////////////////////////
 void loop() {
+  
+  float x0 = 30.5;
+  float y0 = 60.38;
+//  move(x0, y0);
+  float x = 30.5;
+  float y = 60.38;
+  float theta = pi/2;
+  arc(x0, y0, x, y, theta);
+  
+  }
+
+void loop2() {
   // Comptued joint_path, which will be the input to servo (it's a sequence of joint angles)
   // Now, we will have a loop which incrementally updates the servo positions so that
   // the end effector ends up at (xdes, ydes).

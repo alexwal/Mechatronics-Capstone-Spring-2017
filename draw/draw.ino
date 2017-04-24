@@ -8,27 +8,39 @@ void pen_up() {
   lift_servo.writeMicroseconds(lift_servo_pause);
 }
 
-void arc(x0, y0, x, y, r, theta):
-        // Draw a CCW arc originating from x, y with radius r, origin x0, y0.
-        move(x0 + r, y0); // move to 0 degrees. (! not theta0)
+// Draw a CCW arc originating from x, y with radius r, origin x0, y0.
+void arc(float x0, float y0, float x, float y, float theta):
+        //move to x, y --> the poit from which the arc will begin
+        move(x, y)
         pen_down();
+        //initalize vars
+        n = 20; //number of delta theta steps to take to draw arc
+        double del_theta = theta/n;
+        double x_cur = x;
+        double y_cur = y;
+        // this loop moves the arc along for n iterations
+        int i = 0;
+        while (i < n) {
+          //shift x1, y1 so that it is with respect to (0,0) origin
+          double x_shifted = x_cur - x0;
+          double y_shifted = y_cur = y0;
 
-        int STEPS = 20;
-        // 1. translate x, y to about 0,0
-        
-        theta_prime = atan2(x-x0, y-y0);
-        // 2. Get arc step end position.
-        // X. rotate back by theta_prime.
+          //rotate the the shifted point del_theta radians
+          double x_rot = x_shifted * cos(del_theta) - y_shifted * sin(del_theta)
+          double y_rot = x_shifted * sin(del_theta) + y_shifted * cos(del_theta)
 
-        delta_theta = theta/STEPS;
-        
-        for (int i = 0; i < STEPS; i++) {
-          // get next position corr to shift of delta theta
-          x_next = next_x_position(x_cur, y_cur);
-          y_next = next_y_position(x_cur, y_cur);
-          // move to that next position.
-          move(x_next, y_next);
+          //shift point back to original origin (x0, y0)
+          double x_rot_shifted = x_rot + x0
+          double y_rot_shifted = y_rot + y0
+
+          //actually do the move to the intermediate point
+          move(x_rot_shifted, y_rot_shifted);
+
+          x_cur = x_rot_shifted;
+          y_cur = y_rot_shifted; 
         }
+        
+        
         pen_up();
 }
 
