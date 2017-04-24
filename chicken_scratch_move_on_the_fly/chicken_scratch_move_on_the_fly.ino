@@ -297,7 +297,7 @@ void arc(float x0, float y0, float x, float y, float theta){
         //pen_up();
         //move to x, y --> the point from which the arc will begin
         move(x, y);
-        pen_down();
+//        pen_down();
         //initalize vars
         float n = 20.0; //number of delta theta steps to take to draw arc
         float del_theta = theta/n;
@@ -331,33 +331,67 @@ void arc(float x0, float y0, float x, float y, float theta){
 void line(float x0, float y0, float x1, float y1){
         // Draw a line.
         move(x0, y0);
-        pen_down();
+//        pen_down();
         move(x1, y1);
-        pen_up();
+//        pen_up();
 }
 
+void return_to_home() {
+//  pen_up();
+  move(X_HOME, Y_HOME);
+//  pen_down();
+}
+
+//draw_a() {
+//  // RANGE is x = [], y in []
+//  // circle
+//  x0, y0 = a, b;
+//  r = n;
+//  
+//  // line
+//  start = (x0, y0) + (r, r);
+//  end = (x0, y0) + (r, -r);
+//
+//  // translate by bottom left point of WORKING REGION!!!
+//  // so that we're back in robot coordinates.
+//  x0, y0 += bot left
+//  start += bot left
+//  end += bot left
+//
+//  line(start, end);
+//  arc(x0, y0, x0+r, y0, 360);
+//}
+
+//box ratio y/x : 3/1
 void box() {
-  double x_top_left = 13.5;
-  double y_top_left = 84.38;
+  double x_top_left = X_HOME - 15 + 7.5 + 2.5; //18.5
+  double y_top_left = Y_HOME-25 + 20 + 6; //74.38 
 
-  double x_top_right = 35.5;
-  double y_top_right = y_top_left;
+  double x_top_right = X_HOME + 15 - 7.5 - 2.5; //29.5
+  double y_top_right = y_top_left; //74.38
 
-  double x_bottom_right = x_top_right;
-  double y_bottom_right = y_bottom_left;
+  double x_bottom_left = x_top_left; //18.5
+  double y_bottom_left = Y_HOME-25 - 0 - 4; //44.38
+  
+  double x_bottom_right = x_top_right; //29.5
+  double y_bottom_right = y_bottom_left; //44.38 
 
-  double x_bottom_left = x_top_left;
-  double y_bottom_left = 64.38;
+  line(x_top_left, y_top_left, x_top_right, y_top_right);
+  line(x_top_right, y_top_right, x_bottom_right, y_bottom_right);
+  line(x_bottom_right, y_bottom_right, x_bottom_left, y_bottom_left);
+  line(x_bottom_left, y_bottom_left, x_top_left, y_top_left);
  }
 
- void write_a() {
-  float x0 = 25.5;
-  float y0 = 60.38;
-  float x = 35.5;
-  float y = 60.38;
-  float theta = pi;
-  arc(x0, y0, x, y, theta);
- }
+// void write_a() {
+//  float x0 = 25.5;
+//  float y0 = 60.38;
+//  float x = 35.5;
+//  float y = 60.38;
+//  float theta = pi;
+//  arc(x0, y0, x, y, theta);
+//  line();
+//  return_to_home();
+// }
 //etc...etc..
 
 
@@ -371,8 +405,8 @@ void loop() {
   float y = 60.38;
   float theta = pi;
 //  arc(x0, y0, x, y, theta);
-  line()
-  
+  box();
+  return_to_home();
   }
 
 void loop2() {
