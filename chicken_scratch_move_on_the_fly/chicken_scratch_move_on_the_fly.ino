@@ -294,7 +294,7 @@ void pen_up() {
 
 // Draw a CCW arc originating from x, y with radius r, origin x0, y0.
 void arc(float x0, float y0, float x, float y, float theta){
-        pen_up();
+        //pen_up();
         //move to x, y --> the point from which the arc will begin
         move(x, y);
         pen_down();
@@ -325,7 +325,7 @@ void arc(float x0, float y0, float x, float y, float theta){
           y_cur = y_rot_shifted;
           i++; 
         }
-        pen_up();
+        //pen_up();
 }
 
 void line(float x0, float y0, float x1, float y1){
@@ -336,8 +336,28 @@ void line(float x0, float y0, float x1, float y1){
         pen_up();
 }
 
-//void write_a() {
-//}
+void box() {
+  double x_top_left = 13.5;
+  double y_top_left = 84.38;
+
+  double x_top_right = 35.5;
+  double y_top_right = y_top_left;
+
+  double x_bottom_right = x_top_right;
+  double y_bottom_right = y_bottom_left;
+
+  double x_bottom_left = x_top_left;
+  double y_bottom_left = 64.38;
+ }
+
+ void write_a() {
+  float x0 = 25.5;
+  float y0 = 60.38;
+  float x = 35.5;
+  float y = 60.38;
+  float theta = pi;
+  arc(x0, y0, x, y, theta);
+ }
 //etc...etc..
 
 
@@ -347,15 +367,16 @@ void loop() {
   float x0 = 25.5;
   float y0 = 60.38;
 //  move(x0, y0);
-  float x = 30.5;
+  float x = 35.5;
   float y = 60.38;
-  float theta = pi/2;
-  arc(x0, y0, x, y, theta);
+  float theta = pi;
+//  arc(x0, y0, x, y, theta);
+  line()
   
   }
 
 void loop2() {
-  // Comptued joint_path, which will be the input to servo (it's a sequence of joint angles)
+  // Computed joint_path, which will be the input to servo (it's a sequence of joint angles)
   // Now, we will have a loop which incrementally updates the servo positions so that
   // the end effector ends up at (xdes, ydes).
 
