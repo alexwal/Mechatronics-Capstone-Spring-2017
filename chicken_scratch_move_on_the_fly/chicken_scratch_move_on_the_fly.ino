@@ -344,7 +344,7 @@ void line(float x0, float y0, float x1, float y1){
 //////////////////////////////////////////////////////
 void loop() {
   
-  float x0 = 30.5;
+  float x0 = 25.5;
   float y0 = 60.38;
 //  move(x0, y0);
   float x = 30.5;
