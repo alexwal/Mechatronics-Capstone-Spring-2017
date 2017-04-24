@@ -295,7 +295,7 @@ void pen_up() {
 // Draw a CCW arc originating from x, y with radius r, origin x0, y0.
 void arc(float x0, float y0, float x, float y, float theta){
         pen_up();
-        //move to x, y --> the poit from which the arc will begin
+        //move to x, y --> the point from which the arc will begin
         move(x, y);
         pen_down();
         //initalize vars
@@ -308,7 +308,7 @@ void arc(float x0, float y0, float x, float y, float theta){
         while (i < n) {
           //shift x1, y1 so that it is with respect to (0,0) origin
           float x_shifted = x_cur - x0;
-          float y_shifted = y_cur = y0;
+          float y_shifted = y_cur - y0;
 
           //rotate the the shifted point del_theta radians
           float x_rot = x_shifted * cos(del_theta) - y_shifted * sin(del_theta);
