@@ -620,6 +620,26 @@ void func_16() {
   line(x0,y0, x, y);  
 }
 
+void func_17() {
+  float o1_x = (3.0 * x_bottom_left + x_bottom_right)/4.0;
+  float o1_y = (3.0 * y_top_left + y_bottom_left)/4.0;
+
+  float o2_x = (3.0* x_bottom_right + x_bottom_left)/4.0;
+
+  float x1 = x_bottom_left;
+  float x2 = (x_bottom_right + x_bottom_left)/2;
+  float x3 = x_bottom_right;
+
+  pen_up();
+  move(x1,o1_y);
+  pen_down();
+
+  arc(o1_x, o1_y, x1, o1_y, -pi);
+  line(x2, o1_y, x2, y_bottom_left);
+  arc(o2_x, o1_y, x2, o1_y, -pi);
+  line(x3, o1_y, x3, y_bottom_left);
+}
+
 void func_18() {
   float x0 = x_bottom_left;
   float y0 = ((2.0 * y_top_right)/3.0) + y_bottom_right/3.0; 
@@ -727,6 +747,50 @@ void func_23() {
   line(x0,y0, x,y);
 }
 
+void func_25() {
+ float o_x = x_bottom_left;
+ float o_y =  ((2.0*y_top_right)/3.0) + (y_bottom_right/3.0);
+
+ float u_x = ((3.0 * x_bottom_left)/4.0) + (x_bottom_right/4.0);
+ float u_y = ((2.0 * y_bottom_left)/3.0) + (y_top_left/3.0);
+
+ float v_x = (x_bottom_left + 3 * x_bottom_right)/4.0;
+ float v_y = ((2.0 * y_bottom_left)/3.0) + (y_top_left/3.0);
+ 
+
+ float p_x = (x_bottom_left + x_bottom_right)/2;
+ float p_y = ((2.0*y_top_right)/3.0) + (y_bottom_right/3.0);
+
+ float c_x = x_bottom_right;
+ float c_y = ((2.0*y_top_right)/3.0) + (y_bottom_right/3.0);
+
+ pen_up();
+ move(o_x, o_y);
+ pen_down();
+
+ line(o_x, o_y, u_x, u_y);
+ line(u_x, u_y, p_x, p_y);
+ line(p_x, p_y, v_x, v_y);
+ line(v_x, v_y, c_x, c_y);
+ 
+}
+void func_24() {
+  float x0 = x_bottom_left;
+  float y0 = ((2.0 * y_top_right)/3.0) + y_bottom_right/3.0; 
+  pen_up();
+  move(x0,y0);
+  pen_down();
+
+  float x = (x_bottom_left + x_bottom_right)/2.0;
+  float y = ((2.0*y_bottom_left)/3.0) + (y_top_left/3.0);
+  line(x0, y0, x,y);
+
+  float x1 = x_bottom_right;
+  float y1 = ((2.0*y_top_right)/3.0) + (y_bottom_right/3.0); 
+  line(x, y, x1, y1);
+  
+}
+
 void func_26() {
   float x0 = x_bottom_right;
   float y0 = ((2.0*y_top_right)/3.0) + (y_bottom_right/3.0);
@@ -800,6 +864,10 @@ void draw_h() {
   func_12();  
 }
 
+void draw_i() {
+  func_10();
+}
+
 void draw_j(){
   func_9(); 
 }
@@ -812,6 +880,11 @@ void draw_k(){
 
 void draw_l(){
   func_15();
+}
+
+void draw_m() {
+  func_16();
+  func_17();
 }
 
 void draw_n() {
@@ -852,6 +925,14 @@ void draw_u() {
   func_23();  
 }
 
+void draw_v() {
+  func_24();  
+}
+
+void draw_w() {
+  func_25();
+}
+
 void draw_x() {
   func_14();
   func_26();
@@ -870,7 +951,7 @@ void draw_z() {
 
 //////////////////////////////////////////////////////
 void loop() {
-  draw_f();
+  draw_i();
   exit(0);
   //func_1();
 //  pen_up();
