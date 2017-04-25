@@ -86,7 +86,7 @@ float left_servo_180 = 2440;
 float right_servo_0 = 650;
 float right_servo_180 = 2150;
 float lift_servo_write = 1450; //between 1450-1500 depending on pen length
-float lift_servo_pause = 1390; //was 700
+float lift_servo_pause = 1350; //was 700
 
 // // // // // // // // // // // // // // // // // // // // // // // //
 // // // // // // // // // // // // // // // // // // // // // // // //
@@ -419,11 +419,20 @@ void func_3() {
 }
 
 //for the letter c
-//void func_4(){
-//  float x0 =
-//
-//  arc(x0, y0, )
-//}
+void func_4(){
+  float x0 = (x_bottom_left + x_bottom_right)/2.0;
+  float y0 = (y_bottom_left + y_top_left)/ 2.0;
+
+  float x = ((x_bottom_left + x_bottom_right)/2.0) + ((sqrt(2)/12.0) * (y_top_right - y_bottom_right));
+  float y = ((y_bottom_left + y_top_left)/ 2.0) + ((sqrt(2)/12.0) * (y_top_right - y_bottom_right));
+  
+  pen_up();
+  move(x, y);
+  pen_down();
+  float theta = 1.5*pi;
+
+  arc(x0, y0, x, y, theta);
+}
 
 //draw verticle line on right edge along top and middle third
 void func_5(){
@@ -478,9 +487,27 @@ void func_7() {
   float y3 = ((2.0*y_bottom_right)/3.0) + (y_top_right/3.0);  
 }
 
-//FILL ME IN
+//draw 'f'
 void func_8() {
+  float x0 = x_bottom_right;
+  float y0 = (((5.0 * y_top_left) + y_bottom_left)/6.0);
+
+  float x = x_top_right;
+  float y = y_top_right;
+  pen_up();
+  move(x, y);
+  pen_down();
+  float theta = pi/2;
   
+  arc(x0, y0, x, y, theta);
+
+  float x1 = (x_bottom_right + x_bottom_left)/2.0;
+  float y1 = ((5.0 * y_top_left)/6.0) + y_bottom_left/6.0; 
+
+  float x2 = (x_bottom_left + x_bottom_right)/2.0;
+  float y2 = ((2.0 * y_bottom_left)/3.0) + y_top_left/3.0;
+
+  line(x1,y1, x2, y2);
 }
 
 //write 'j'
@@ -649,6 +676,44 @@ void func_21() {
   arc(x_orig, y_orig, x1, y1, pi);
 }
 
+void func_22() {
+  float x_orig1 = (x_bottom_left + x_bottom_right)/2.0;
+  float y_orig1 = (y_bottom_left + y_top_left)/ 2.0;
+
+  float x_orig2 = (x_bottom_left + x_bottom_right)/2.0;
+  float y_orig2 = ((7.0*y_top_right)/12.0) + ((5.0*y_bottom_right)/12.0);
+
+  float x_orig3 = (x_bottom_left + x_bottom_right)/2.0;
+  float y_orig3 = ((5.0*y_top_right)/12.0) + ((7.0*y_bottom_right)/12.0);
+
+  float x1 = ((x_bottom_left + x_bottom_right)/2.0) + ((sqrt(2)/12.0) * (y_top_right - y_bottom_right));
+  float y1 = ((y_bottom_left + y_top_left)/ 2.0) + ((sqrt(2)/12.0) * (y_top_right - y_bottom_right));
+
+  float x2 = (x_bottom_left + x_bottom_right)/2.0;
+  float y2 = ((2.0*y_top_right)/3.0) + (y_bottom_right/3.0);
+
+  float x3 = ((x_bottom_left + x_bottom_right)/2.0) - ((sqrt(2)/12.0) * (y_top_right - y_bottom_right));
+  float y3 = ((y_bottom_left + y_top_left)/ 2.0) - ((sqrt(2)/12.0) * (y_top_right - y_bottom_right));
+
+  float x4 = (x_bottom_left + x_bottom_right)/2;
+  float y4 = ((2.0 * y_bottom_left)/3.0) + y_top_left/3.0;
+  
+  pen_up();
+  move(x1, y1);
+  pen_down();
+  float theta1 = pi/4;
+  float theta2 = pi;
+
+  arc(x_orig1, y_orig1, x1, y1, theta1);
+  arc(x_orig2, y_orig2, x2, y2, theta2);
+  pen_up();
+  
+  move(x3, y3);
+  pen_down();
+  arc(x_orig1, y_orig1, x3, y3, theta1);
+  arc(x_orig3, y_orig3, x4, y4, theta2);
+}
+
 void func_23() {
   float x0 = x_bottom_right;
   float y0 = ((2.0*y_top_right)/3.0) + (y_bottom_right/3.0);
@@ -707,6 +772,11 @@ void draw_b(){
   func_3();  
 }
 
+void draw_c() {
+  func_4();
+
+}
+
 void draw_d(){
   func_1();
   func_5();  
@@ -717,6 +787,11 @@ void draw_e() {
   func_6();
   func_7();  
 
+}
+
+void draw_f() {
+  func_8();
+  func_20();
 }
 
 void draw_h() {
@@ -763,6 +838,10 @@ void draw_r() {
   func_6();  
 }
 
+void draw_s() {
+  func_22();
+}
+
 void draw_t() {
   func_15();
   func_20();
@@ -789,10 +868,9 @@ void draw_z() {
 }
 
 
-
 //////////////////////////////////////////////////////
 void loop() {
-  draw_z();
+  draw_f();
   exit(0);
   //func_1();
 //  pen_up();
