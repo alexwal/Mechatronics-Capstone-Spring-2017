@@ -437,9 +437,255 @@ void func_5(){
   float x = x_bottom_right;
   float y = ((2.0*y_bottom_right)/3.0) + (y_top_right/3.0);
 
-  line(x0, y0, x, y);
+  line(x0, y0, x, y); 
+}
+
+//makes a 180 arc in the top half of the middle third
+void func_6() {
+  float x0 = (x_bottom_left + x_bottom_right)/2.0;
+  float y0 = (y_bottom_left + y_top_left)/ 2.0;
+
+  float x = x_bottom_right;
+  float y = y0;
+  pen_up();
+  move(x, y);
+  pen_down();
+  float theta = pi;
   
+  arc(x0, y0, x, y, theta);
   
+}
+
+//bottom half of 'e'
+void func_7() {
+  float x0 = x_bottom_right;
+  float y0 = (y_bottom_left + y_top_left)/ 2.0;
+
+  pen_up();
+  move(x0, y0);
+  pen_down();
+
+  float x1 = x_bottom_left;
+  float y1 = (y_bottom_left + y_top_left)/2.0;
+  line(x0, y0, x1, y1);
+
+  arc(x0, y0, x1, y1, pi);
+
+  float x2 = (x_bottom_left + x_bottom_right)/2.0;
+  float y2 = ((2.0*y_bottom_left)/3.0) + (y_top_left/3.0);
+
+  float x3 = x_bottom_right;
+  float y3 = ((2.0*y_bottom_right)/3.0) + (y_top_right/3.0);  
+}
+
+//FILL ME IN
+void func_8() {
+  
+}
+
+//write 'j'
+void func_9() {
+  float x0 = x_bottom_right;
+  float y0 = ((2.0*y_top_right)/3.0) + (y_bottom_right/3.0);
+
+  pen_up();
+  move (x0, y0);
+  pen_down();
+  float x1 = x_bottom_right;
+  float y1 = (y_top_left/6.0) + ((5.0 * y_bottom_left)/6.0);
+  line(x0, y0, x1, y1);
+  float x_orig = (x_bottom_left + x_bottom_right)/2.0;
+  float y_orig = (y_top_left/6.0) + ((5.0 * y_bottom_left)/6.0);
+
+  float x2 = x_bottom_left;
+  float y2 = (y_top_left/6.0) + ((5.0 * y_bottom_left)/6.0);
+
+  pen_up();
+  move(x2, y2);
+  pen_down();
+  arc(x_orig, y_orig, x2, y2, pi);
+}
+
+
+//verticle line in the middle of the third third //DEBUG THIS
+void func_10() {
+  float x0 = (x_bottom_left + x_bottom_right)/2.0;
+  float y0 = ((2.0*y_top_right)/3.0) + (y_bottom_right/3.0);
+
+  pen_up();
+  move(x0, y0);
+  pen_down();
+
+  float x = (x_bottom_left + x_bottom_right)/2.0;
+  float y = ((2.0*y_bottom_left)/3.0) + (y_top_left/3.0);
+  line(x0, y0, x,y);
+  
+  pen_up();
+  float x2 = (x_bottom_left + x_bottom_right)/2.0;
+  float y2 = (y_bottom_left/6.0) + ((5.0 * y_top_left)/6.0);
+  move(x2, y2);
+  pen_down();
+}
+
+void func_12() {
+  float x0 = x_bottom_right;
+  float y0 = (y_bottom_left + y_top_left)/2.0;
+  pen_up();
+  move(x0,y0);
+  pen_down();
+  float x = x_bottom_right;
+  float y = ((2.0*y_bottom_right)/3.0) + (y_top_right/3.0);
+  
+  line(x0, y0, x, y); 
+}
+
+//draw a diagonal in the middle third
+void func_13() {
+  float x0 = x_bottom_right;
+  float y0 = ((5.0 * y_top_left)/6.0) + y_bottom_left/6.0; 
+  pen_up();
+  move(x0,y0);
+  pen_down();
+
+  float x = x_bottom_left;
+  float y = ((2.0 * y_top_right)/3.0) + y_bottom_right/3.0;
+
+  line(x0,y0, x, y);
+}
+
+void func_14() {
+  float x0 = x_bottom_left;
+  float y0 = ((2.0 * y_top_right)/3.0) + y_bottom_right/3.0; 
+  pen_up();
+  move(x0,y0);
+  pen_down();
+
+  float x = x_bottom_right;
+  float y = ((2.0 * y_bottom_right)/3.0) + y_top_right/3.0; 
+
+  line(x0,y0, x, y);
+
+}
+
+void func_15() {
+  float x0 = (x_bottom_left + x_bottom_right)/2;
+  float y0 = y_top_left; 
+  pen_up();
+  move(x0,y0);
+  pen_down();
+
+  float x = (x_bottom_left + x_bottom_right)/2;
+  float y = ((2.0 * y_bottom_left)/3.0) + y_top_left/3.0; 
+
+  line(x0,y0, x, y); 
+}
+
+void func_16() {
+  float x0 = x_bottom_left;
+  float y0 = ((2.0 * y_top_right)/3.0) + y_bottom_right/3.0; 
+  pen_up();
+  move(x0,y0);
+  pen_down();
+
+  float x = x_bottom_left;
+  float y = ((2.0 * y_bottom_left)/3.0) + y_top_left/3.0; 
+
+  line(x0,y0, x, y);  
+}
+
+void func_18() {
+  float x0 = x_bottom_left;
+  float y0 = ((2.0 * y_top_right)/3.0) + y_bottom_right/3.0; 
+  pen_up();
+  move(x0,y0);
+  pen_down();
+
+  float x = x_bottom_left;
+  float y = y_bottom_left;
+
+  line(x0,y0, x,y);
+}
+
+void func_19 () {
+  float x0 = x_bottom_right;
+  float y0 = ((2.0*y_top_right)/3.0) + (y_bottom_right/3.0);
+
+  pen_up();
+  move (x0, y0);
+  pen_down();
+  float x = x_bottom_right;
+  float y = y_bottom_right;
+
+  line(x0,y0, x,y);
+}
+
+void func_20() {
+  float x0 = x_bottom_left;
+  float y0 = ((2.0 * y_top_right)/3.0) + y_bottom_right/3.0; 
+  pen_up();
+  move(x0,y0);
+  pen_down();
+
+  float x = x_bottom_right;
+  float y = ((2.0*y_top_right)/3.0) + (y_bottom_right/3.0);
+
+  line(x0,y0, x,y);
+}
+
+void func_21() {
+  float x0 = x_bottom_left;
+  float y0 = ((2.0 * y_top_right)/3.0) + y_bottom_right/3.0;
+  
+  pen_up();
+  move (x0, y0);
+  pen_down();
+  float x1 = x_bottom_left;
+  float y1 = (y_bottom_left + y_top_left)/2.0;
+  line(x0, y0, x1, y1);
+  
+  float x_orig = (x_bottom_left + x_bottom_right)/2.0;
+  float y_orig = (y_bottom_left + y_top_left)/ 2.0;
+  
+  arc(x_orig, y_orig, x1, y1, pi);
+}
+
+void func_23() {
+  float x0 = x_bottom_right;
+  float y0 = ((2.0*y_top_right)/3.0) + (y_bottom_right/3.0);
+
+  pen_up();
+  move (x0, y0);
+  pen_down();
+  float x = x_bottom_right;
+  float y = (y_bottom_left + y_top_left)/2.0;
+
+  line(x0,y0, x,y);
+}
+
+void func_26() {
+  float x0 = x_bottom_right;
+  float y0 = ((2.0*y_top_right)/3.0) + (y_bottom_right/3.0);
+
+  pen_up();
+  move (x0, y0);
+  pen_down();
+  float x = x_bottom_left;
+  float y = ((2.0 * y_bottom_left)/3.0) + y_top_left/3.0;
+
+  line(x0,y0, x,y);
+
+}
+
+void func_27() {
+  float x0 = x_bottom_left;
+  float y0 = ((2.0 * y_bottom_left)/3.0) + y_top_left/3.0; 
+  pen_up();
+  move(x0,y0);
+  pen_down();
+
+  float x = x_bottom_right;
+  float y = ((2.0 * y_bottom_right)/3.0) + y_top_right/3.0; 
+  line(x0,y0, x,y);
 }
 
 //box ratio y/x : 3/1 //FOR DEBUGGING
@@ -467,9 +713,86 @@ void draw_d(){
   
 }
 
+void draw_e() {
+  func_6();
+  func_7();  
+
+}
+
+void draw_h() {
+  func_3();
+  func_6();
+  func_12();  
+}
+
+void draw_j(){
+  func_9(); 
+}
+
+void draw_k(){
+  func_3();
+  func_13();
+  func_14();  
+}
+
+void draw_l(){
+  func_15();
+}
+
+void draw_n() {
+  func_16();
+  func_6();
+  func_12();
+}
+
+void draw_o() { 
+  func_1();  
+}
+
+void draw_p() {
+  func_18();
+  func_1();
+}
+void draw_q(){
+  func_1();
+  func_19();  
+}
+
+void draw_r() {
+  func_16();
+  func_6();  
+}
+
+void draw_t() {
+  func_15();
+  func_20();
+}
+
+void draw_u() {
+  func_21();
+  func_23();  
+}
+
+void draw_x() {
+  func_14();
+  func_26();
+}
+void draw_y() {
+  func_21();
+  func_9();    
+}
+
+void draw_z() {
+  func_20();
+  func_26();
+  func_27();  
+}
+
+
+
 //////////////////////////////////////////////////////
 void loop() {
-  draw_d();
+  draw_z();
   exit(0);
   //func_1();
 //  pen_up();
