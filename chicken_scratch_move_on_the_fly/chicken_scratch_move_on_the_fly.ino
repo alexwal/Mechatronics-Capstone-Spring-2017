@@ -53,6 +53,12 @@
 #define SERVO_PIN_LEFT  9
 #define SERVO_PIN_RIGHT 13
 
+int motor1Pin = 5;
+int motor2Pin = 6;
+int onSpeed = 150;
+int offSpeed = 0;
+boolean notWriting = true;
+
 // Fixed robot parameters. (units: millimeters)
 float a = 0; // See diagram.
 float b = 47; // See diagram.
@@ -81,10 +87,10 @@ Servo lift_servo;
 // At 0 degrees, both servos point right horizontal, and at 180 degrees, servos rotate ccw to left horizontal.
 // IMPORTANT: Callibrate by ONLY attaching first robot arm link to servos. (not whole tool)
 
-float left_servo_0 = 700;
+float left_servo_0 = 600;
 float left_servo_180 = 2440;
-float right_servo_0 = 650;
-float right_servo_180 = 2150;
+float right_servo_0 = 580;
+float right_servo_180 = 2300;
 float lift_servo_write = 1450; //between 1450-1500 depending on pen length
 float lift_servo_pause = 1350; //was 700
 
@@ -115,7 +121,7 @@ float ydes_path[] = {Y_HOME, 59.38, 63.3972209269, 67.0212082798, 69.8972209269,
 //|\\||//||\\||//||\\||//||\\||//||\\||//||\\||//||\\||//||\\||//||\\||//||\\||//|
 
 float step_size = 0.8; // initial value of alpha in move(...)
-float decay = 0.001; // step size decay
+float decay = 0.0; // step size decay
 float tolerance = 0.4;
 
 //used to determine the bounds of rect inside which letters are drawn
@@ -143,9 +149,12 @@ float right_rad_to_joint_angle(float rad) {
 }
 
 void setup() {
+  pinMode(motor1Pin, OUTPUT);
+  pinMode(motor2Pin, OUTPUT);
+  
   // Start serial monitor.
   Serial.begin(9600);
-
+  
   // Setup "desk" boundaries.
   float extra = 1;
   C1[0] = a - l1;
@@ -182,6 +191,18 @@ void setup() {
 void timeLoop (long int startMillis, long int interval) { // the delay function
   // this loops until milliseconds has passed since the function began
   while (millis() - startMillis < interval) {}
+}
+
+void moveMotors() {
+   // Motors turned on, move paper distance of ____ with on time of _____.
+   analogWrite(motor1Pin, offSpeed);
+   analogWrite(motor2Pin, onSpeed);
+   delay(250);
+   // Turn off motors after character space stopped.
+   analogWrite(motor1Pin, offSpeed);
+   analogWrite(motor2Pin, offSpeed);
+   delay(2000);
+   
 }
 
 // Used in finding: theta' = J * q', the required nudge of angles to get
@@ -262,6 +283,7 @@ void move(float xdes, float ydes) {
     left_servo.writeMicroseconds(t1_us);
     right_servo.writeMicroseconds(t2_us);
 
+
     // // // // // // // // // // // // // // //
     // \\ // \\ // \\ // \\ // \\ // \\ // \\ //
     // // // // // // // // // // // // // // //
@@ -290,6 +312,7 @@ void move(float xdes, float ydes) {
   // Done moving servos along joint path.
   // return_pen_to_home();
 }
+
 
 
 //Draw on the fly without saving paths in arrays
@@ -351,7 +374,14 @@ void line(float x0, float y0, float x1, float y1){
 
 void return_to_home() {
 //  pen_up();
-  move(X_HOME, Y_HOME);
+  move(X_HOME, Y_HOME); // gets us pretty close to original position so that we can explicitly set servo angle.
+  double rad = pi / 2;
+  double left_us   =   left_rad_to_joint_angle(rad);
+  double right_us  =   right_rad_to_joint_angle(rad);
+  left_servo.writeMicroseconds(left_us); // RECORD RANGES ABOVE!
+  right_servo.writeMicroseconds(right_us); // RECORD RANGES ABOVE!
+  x_cur = X_HOME;
+  y_cur = Y_HOME;
 //  pen_down();
 }
 
@@ -454,37 +484,52 @@ void func_6() {
   float x0 = (x_bottom_left + x_bottom_right)/2.0;
   float y0 = (y_bottom_left + y_top_left)/ 2.0;
 
-  float x = x_bottom_right;
+  float x = x_bottom_left;
   float y = y0;
-  pen_up();
-  move(x, y);
-  pen_down();
-  float theta = pi;
+//  pen_up();
+//  move(x, y);
+//  pen_down();
+  float theta = -pi;
   
   arc(x0, y0, x, y, theta);
   
 }
 
-//bottom half of 'e'
+//bottom half of 'e' CHANGED to first e to c
 void func_7() {
-  float x0 = x_bottom_right;
-  float y0 = (y_bottom_left + y_top_left)/ 2.0;
+  float x0 = x_bottom_left;
+  float y0 = (y_bottom_left + y_top_left)/2.0;
+
+//  float x0 = ((x_bottom_left + x_bottom_right)/2.0) - ((sqrt(2)/12.0) * (y_top_right - y_bottom_right)); //bigger loop e
+//  float y0 = ((y_bottom_left + y_top_left)/ 2.0) - ((sqrt(2)/12.0) * (y_top_right - y_bottom_right));
 
   pen_up();
   move(x0, y0);
   pen_down();
 
-  float x1 = x_bottom_left;
-  float y1 = (y_bottom_left + y_top_left)/2.0;
-  line(x0, y0, x1, y1);
-
-  arc(x0, y0, x1, y1, pi);
-
-  float x2 = (x_bottom_left + x_bottom_right)/2.0;
-  float y2 = ((2.0*y_bottom_left)/3.0) + (y_top_left/3.0);
-
-  float x3 = x_bottom_right;
-  float y3 = ((2.0*y_bottom_right)/3.0) + (y_top_right/3.0);  
+  float x = ((x_bottom_left + x_bottom_right)/2.0) + ((sqrt(2)/12.0) * (y_top_right - y_bottom_right));
+  float y = ((y_bottom_left + y_top_left)/ 2.0) + ((sqrt(2)/12.0) * (y_top_right - y_bottom_right));
+  
+  line(x0, y0, x, y); 
+  
+//  float x0 = x_bottom_right;
+//  float y0 = (y_bottom_left + y_top_left)/ 2.0;
+//
+//  pen_up();
+//  move(x0, y0);
+//  pen_down();
+//
+//  float x1 = x_bottom_left;
+//  float y1 = (y_bottom_left + y_top_left)/2.0;
+//  line(x0, y0, x1, y1);
+//
+//  arc(x0, y0, x1, y1, pi);
+//
+//  float x2 = (x_bottom_left + x_bottom_right)/2.0;
+//  float y2 = ((2.0*y_bottom_left)/3.0) + (y_top_left/3.0);
+//
+//  float x3 = x_bottom_right;
+//  float y3 = ((2.0*y_bottom_right)/3.0) + (y_top_right/3.0);  
 }
 
 //draw 'f'
@@ -520,17 +565,19 @@ void func_9() {
   pen_down();
   float x1 = x_bottom_right;
   float y1 = (y_top_left/6.0) + ((5.0 * y_bottom_left)/6.0);
+  
   line(x0, y0, x1, y1);
+  
   float x_orig = (x_bottom_left + x_bottom_right)/2.0;
   float y_orig = (y_top_left/6.0) + ((5.0 * y_bottom_left)/6.0);
 
-  float x2 = x_bottom_left;
+  float x2 = x_bottom_right;
   float y2 = (y_top_left/6.0) + ((5.0 * y_bottom_left)/6.0);
 
   pen_up();
   move(x2, y2);
   pen_down();
-  arc(x_orig, y_orig, x2, y2, pi);
+  arc(x_orig, y_orig, x2, y2, -pi);
 }
 
 
@@ -635,9 +682,9 @@ void func_17() {
   pen_down();
 
   arc(o1_x, o1_y, x1, o1_y, -pi);
-  line(x2, o1_y, x2, y_bottom_left);
+  line(x2, o1_y, x2, ((2.0 * y_bottom_left)/3.0) + y_top_left/3.0);
   arc(o2_x, o1_y, x2, o1_y, -pi);
-  line(x3, o1_y, x3, y_bottom_left);
+  line(x3, o1_y, x3, ((2.0 * y_bottom_left)/3.0) + y_top_left/3.0);
 }
 
 void func_18() {
@@ -726,24 +773,24 @@ void func_22() {
 
   arc(x_orig1, y_orig1, x1, y1, theta1);
   arc(x_orig2, y_orig2, x2, y2, theta2);
-  pen_up();
+//  pen_up();
   
-  move(x3, y3);
-  pen_down();
-  arc(x_orig1, y_orig1, x3, y3, theta1);
-  arc(x_orig3, y_orig3, x4, y4, theta2);
+//  move(x3, y3);
+//  pen_down();
+
+  arc(x_orig3, y_orig3, x_orig1, y_orig1, -theta2);
+  arc(x_orig1, y_orig1, x4, y4, -theta1);
 }
 
 void func_23() {
   float x0 = x_bottom_right;
-  float y0 = ((2.0*y_top_right)/3.0) + (y_bottom_right/3.0);
-
-  pen_up();
-  move (x0, y0);
-  pen_down();
+  float y0 = (y_bottom_left + y_top_left)/2.0;
   float x = x_bottom_right;
-  float y = (y_bottom_left + y_top_left)/2.0;
+  float y = ((2.0*y_top_right)/3.0) + (y_bottom_right/3.0);
 
+//  pen_up();
+//  move (x0, y0);
+//  pen_down();
   line(x0,y0, x,y);
 }
 
@@ -817,6 +864,20 @@ void func_27() {
   line(x0,y0, x,y);
 }
 
+void func_28() {
+  float x0 = (x_bottom_left + x_bottom_right)/2.0;
+  float y0 = (y_bottom_left + y_top_left)/ 2.0;
+
+  float x = x_bottom_left;
+  float y = y0;
+//  pen_up();
+//  move(x, y);
+//  pen_down();
+  float theta = 2*pi;
+
+  arc(x0, y0, x, y, -theta);
+}
+
 //box ratio y/x : 3/1 //FOR DEBUGGING
 void box() {
 
@@ -832,8 +893,8 @@ void draw_a() {
 }
 
 void draw_b(){
-  func_1();
-  func_3();  
+  func_3();
+  func_28();  
 }
 
 void draw_c() {
@@ -848,14 +909,20 @@ void draw_d(){
 }
 
 void draw_e() {
-  func_6();
-  func_7();  
-
+//  func_6();
+//  func_7();  
+    func_7();
+    func_4();
 }
 
 void draw_f() {
   func_8();
   func_20();
+}
+
+void draw_g() {
+  func_1();
+  func_9();
 }
 
 void draw_h() {
@@ -899,7 +966,7 @@ void draw_o() {
 
 void draw_p() {
   func_18();
-  func_1();
+  func_28();
 }
 void draw_q(){
   func_1();
@@ -951,12 +1018,67 @@ void draw_z() {
 
 //////////////////////////////////////////////////////
 void loop() {
-  draw_i();
-  exit(0);
-  //func_1();
-//  pen_up();
-//  func_2();
+//  arc(X_HOME, Y_HOME-15, X_HOME + 5, Y_HOME-15, 2.0*pi);
+
+    draw_b();
+    pen_up();
+    timeLoop(millis(), 1000);
+    moveMotors();
+    timeLoop(millis(), 1000);
+    pen_down();
+
+    draw_e();
+    pen_up();
+    timeLoop(millis(), 1000);
+    moveMotors();
+    timeLoop(millis(), 1000);
+    pen_down();
+
+    draw_r();
+    pen_up();
+    timeLoop(millis(), 1000);
+    moveMotors();
+    timeLoop(millis(), 1000);
+    pen_down();
+
+    draw_k();
+    pen_up();
+    timeLoop(millis(), 1000);
+    moveMotors();
+    timeLoop(millis(), 1000);
+    pen_down();
+//
+//    draw_e();
+//    pen_up();
+//    moveMotors();
+//    timeLoop(millis(), 2000);
+//    pen_down();
+//
+//    draw_l();
+//    pen_up();
+//    moveMotors();
+//    timeLoop(millis(), 2000);
+//    pen_down();
+//    
+//    draw_e();
+//    pen_up();
+//    moveMotors();
+//    timeLoop(millis(), 2000);
+//    pen_down();
+//
+//    draw_y();
+//    pen_up();
+//    moveMotors();
+//    timeLoop(millis(), 2000);
+//    pen_down();
+
+
+    exit(0);
+    
+
+//  box();
 //  return_to_home();
+//  timeLoop(millis(),3000);
   }
 
 void loop2() {
