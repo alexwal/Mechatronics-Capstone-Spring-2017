@@ -86,7 +86,7 @@ float left_servo_180 = 2440;
 float right_servo_0 = 650;
 float right_servo_180 = 2150;
 float lift_servo_write = 1450; //between 1450-1500 depending on pen length
-float lift_servo_pause = 700;
+float lift_servo_pause = 1390; //was 700
 
 // // // // // // // // // // // // // // // // // // // // // // // //
 // // // // // // // // // // // // // // // // // // // // // // // //
@@ -117,6 +117,19 @@ float ydes_path[] = {Y_HOME, 59.38, 63.3972209269, 67.0212082798, 69.8972209269,
 float step_size = 0.8; // initial value of alpha in move(...)
 float decay = 0.001; // step size decay
 float tolerance = 0.4;
+
+//used to determine the bounds of rect inside which letters are drawn
+double x_top_left = X_HOME - 15 + 7.5 + 2.5; //18.5
+double y_top_left = Y_HOME-25 + 20 + 6; //74.38 
+
+double x_top_right = X_HOME + 15 - 7.5 - 2.5; //28.5
+double y_top_right = y_top_left; //74.38
+
+double x_bottom_left = x_top_left; //18.5
+double y_bottom_left = Y_HOME-25 - 0 - 4; //44.38
+
+double x_bottom_right = x_top_right; //28.5
+double y_bottom_right = y_bottom_left; //44.38 
 
 // We update these arrays as we move the robot.
 float J[2][2]; // this is the Jacobian
@@ -362,19 +375,75 @@ void return_to_home() {
 //  arc(x0, y0, x0+r, y0, 360);
 //}
 
-//box ratio y/x : 3/1
-void box() {
-  double x_top_left = X_HOME - 15 + 7.5 + 2.5; //18.5
-  double y_top_left = Y_HOME-25 + 20 + 6; //74.38 
+//drawing a circle in middle third
+void func_1() {
+  float x0 = (x_bottom_left + x_bottom_right)/2.0;
+  float y0 = (y_bottom_left + y_top_left)/ 2.0;
 
-  double x_top_right = X_HOME + 15 - 7.5 - 2.5; //29.5
-  double y_top_right = y_top_left; //74.38
+  float x = x_bottom_right;
+  float y = y0;
+  pen_up();
+  move(x, y);
+  pen_down();
+  float theta = 2*pi;
 
-  double x_bottom_left = x_top_left; //18.5
-  double y_bottom_left = Y_HOME-25 - 0 - 4; //44.38
+  arc(x0, y0, x, y, theta);
+}
+
+//draw  verticle line in middle third on right edge
+void func_2() {
+    float x0 = x_bottom_right;
+    float y0 = ((2.0*y_top_right)/3.0) + (y_bottom_right/3.0);
+    pen_up();
+    move(x0,y0);
+    pen_down();
+    float x = x_bottom_right;
+    float y = ((2.0*y_bottom_right)/3.0) + (y_top_right/3.0);
+    
+    line(x0, y0, x, y); 
+}
+
+//draw verticle line on left edge along top and middle third
+void func_3() {
+  float x0 = x_top_left;
+  float y0 = y_top_left ;
+
+  pen_up();
+  move(x0, y0);
+  pen_down();
+
+  float x = x_bottom_left;
+  float y = ((2.0*y_bottom_left)/3.0) + (y_top_left/3.0);
+
+  line(x0, y0, x, y);
+}
+
+//for the letter c
+//void func_4(){
+//  float x0 =
+//
+//  arc(x0, y0, )
+//}
+
+//draw verticle line on right edge along top and middle third
+void func_5(){
+  float x0 = x_top_right;
+  float y0 = y_top_right;
+
+  pen_up();
+  move(x0, y0);
+  pen_down();
+
+  float x = x_bottom_right;
+  float y = ((2.0*y_bottom_right)/3.0) + (y_top_right/3.0);
+
+  line(x0, y0, x, y);
   
-  double x_bottom_right = x_top_right; //29.5
-  double y_bottom_right = y_bottom_left; //44.38 
+  
+}
+
+//box ratio y/x : 3/1 //FOR DEBUGGING
+void box() {
 
   line(x_top_left, y_top_left, x_top_right, y_top_right);
   line(x_top_right, y_top_right, x_bottom_right, y_bottom_right);
@@ -382,31 +451,30 @@ void box() {
   line(x_bottom_left, y_bottom_left, x_top_left, y_top_left);
  }
 
-// void write_a() {
-//  float x0 = 25.5;
-//  float y0 = 60.38;
-//  float x = 35.5;
-//  float y = 60.38;
-//  float theta = pi;
-//  arc(x0, y0, x, y, theta);
-//  line();
-//  return_to_home();
-// }
-//etc...etc..
+void draw_a() {
+  func_1();
+  func_2();    
+}
 
+void draw_b(){
+  func_1();
+  func_3();  
+}
+
+void draw_d(){
+  func_1();
+  func_5();  
+  
+}
 
 //////////////////////////////////////////////////////
 void loop() {
-  
-  float x0 = 25.5;
-  float y0 = 60.38;
-//  move(x0, y0);
-  float x = 35.5;
-  float y = 60.38;
-  float theta = pi;
-//  arc(x0, y0, x, y, theta);
-  box();
-  return_to_home();
+  draw_d();
+  exit(0);
+  //func_1();
+//  pen_up();
+//  func_2();
+//  return_to_home();
   }
 
 void loop2() {
