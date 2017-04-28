@@ -244,7 +244,7 @@ void move(float xdes, float ydes) {
   float alpha = step_size;
   int i = 0;
   while (mag(xdes - x_cur, ydes - y_cur) > tolerance && i < MAX_MOVES) {
-    Serial.println("[MOVE] Current position @ iteration " + String(i) + ", x_cur: " + String(x_cur, 2) + ", y_cur: " + String(y_cur, 2) + ", t1_cur: " + String(t1_cur, 2) + ", t2_cur: " + String(t2_cur, 2));
+//    Serial.println("[MOVE] Current position @ iteration " + String(i) + ", x_cur: " + String(x_cur, 2) + ", y_cur: " + String(y_cur, 2) + ", t1_cur: " + String(t1_cur, 2) + ", t2_cur: " + String(t2_cur, 2));
     timeLoop(millis(), 50);
 
     // The Jacobian is the exact approximation of our dynamics at the current state.
@@ -409,13 +409,13 @@ void return_to_home() {
 void func_1() {
   float x0 = (x_bottom_left + x_bottom_right)/2.0;
   float y0 = (y_bottom_left + y_top_left)/ 2.0;
-
   float x = x_bottom_right;
   float y = y0;
-  pen_up();
+  float theta = 2*pi;
+  
+//  pen_up();
   move(x, y);
   pen_down();
-  float theta = 2*pi;
 
   arc(x0, y0, x, y, theta);
 }
@@ -424,27 +424,25 @@ void func_1() {
 void func_2() {
     float x0 = x_bottom_right;
     float y0 = ((2.0*y_top_right)/3.0) + (y_bottom_right/3.0);
-    pen_up();
-    move(x0,y0);
-    pen_down();
     float x = x_bottom_right;
     float y = ((2.0*y_bottom_right)/3.0) + (y_top_right/3.0);
     
-    line(x0, y0, x, y); 
+//    pen_up();
+    move(x0,y0);
+    pen_down();
+
+    line(x0, y0, x, y);
 }
 
 //draw verticle line on left edge along top and middle third
 void func_3() {
   float x0 = x_top_left;
-  float y0 = y_top_left ;
-
-  pen_up();
-  move(x0, y0);
-  pen_down();
-
+  float y0 = y_top_left;
   float x = x_bottom_left;
   float y = ((2.0*y_bottom_left)/3.0) + (y_top_left/3.0);
 
+  move(x0, y0);
+  pen_down();
   line(x0, y0, x, y);
 }
 
@@ -456,7 +454,6 @@ void func_4(){
   float x = ((x_bottom_left + x_bottom_right)/2.0) + ((sqrt(2)/12.0) * (y_top_right - y_bottom_right));
   float y = ((y_bottom_left + y_top_left)/ 2.0) + ((sqrt(2)/12.0) * (y_top_right - y_bottom_right));
   
-  pen_up();
   move(x, y);
   pen_down();
   float theta = 1.5*pi;
@@ -469,7 +466,6 @@ void func_5(){
   float x0 = x_top_right;
   float y0 = y_top_right;
 
-  pen_up();
   move(x0, y0);
   pen_down();
 
@@ -486,9 +482,8 @@ void func_6() {
 
   float x = x_bottom_left;
   float y = y0;
-//  pen_up();
-//  move(x, y);
-//  pen_down();
+  move(x, y);
+  pen_down();
   float theta = -pi;
   
   arc(x0, y0, x, y, theta);
@@ -503,7 +498,6 @@ void func_7() {
 //  float x0 = ((x_bottom_left + x_bottom_right)/2.0) - ((sqrt(2)/12.0) * (y_top_right - y_bottom_right)); //bigger loop e
 //  float y0 = ((y_bottom_left + y_top_left)/ 2.0) - ((sqrt(2)/12.0) * (y_top_right - y_bottom_right));
 
-  pen_up();
   move(x0, y0);
   pen_down();
 
@@ -539,7 +533,7 @@ void func_8() {
 
   float x = x_top_right;
   float y = y_top_right;
-  pen_up();
+//  pen_up();
   move(x, y);
   pen_down();
   float theta = pi/2;
@@ -560,7 +554,7 @@ void func_9() {
   float x0 = x_bottom_right;
   float y0 = ((2.0*y_top_right)/3.0) + (y_bottom_right/3.0);
 
-  pen_up();
+//  pen_up();
   move (x0, y0);
   pen_down();
   float x1 = x_bottom_right;
@@ -571,13 +565,7 @@ void func_9() {
   float x_orig = (x_bottom_left + x_bottom_right)/2.0;
   float y_orig = (y_top_left/6.0) + ((5.0 * y_bottom_left)/6.0);
 
-  float x2 = x_bottom_right;
-  float y2 = (y_top_left/6.0) + ((5.0 * y_bottom_left)/6.0);
-
-  pen_up();
-  move(x2, y2);
-  pen_down();
-  arc(x_orig, y_orig, x2, y2, -pi);
+  arc(x_orig, y_orig, x1, y1, -pi);
 }
 
 
@@ -586,7 +574,7 @@ void func_10() {
   float x0 = (x_bottom_left + x_bottom_right)/2.0;
   float y0 = ((2.0*y_top_right)/3.0) + (y_bottom_right/3.0);
 
-  pen_up();
+//  pen_up();
   move(x0, y0);
   pen_down();
 
@@ -597,14 +585,25 @@ void func_10() {
   pen_up();
   float x2 = (x_bottom_left + x_bottom_right)/2.0;
   float y2 = (y_bottom_left/6.0) + ((5.0 * y_top_left)/6.0);
-  move(x2, y2);
+  float y3 = y2 * 1.05;
+  move(x2, y3);
   pen_down();
+  line(x2, y3, x2, y2);
+}
+
+void func_11() {
+  float x = x_bottom_right;
+  float y = (y_bottom_left/6.0) + ((5.0 * y_top_left)/6.0);
+  float y2 = y * 1.05;
+  move(x, y2);
+  pen_down();
+  line(x, y2, x, y);
 }
 
 void func_12() {
   float x0 = x_bottom_right;
   float y0 = (y_bottom_left + y_top_left)/2.0;
-  pen_up();
+//  pen_up();
   move(x0,y0);
   pen_down();
   float x = x_bottom_right;
@@ -617,7 +616,7 @@ void func_12() {
 void func_13() {
   float x0 = x_bottom_right;
   float y0 = ((5.0 * y_top_left)/6.0) + y_bottom_left/6.0; 
-  pen_up();
+//  pen_up();
   move(x0,y0);
   pen_down();
 
@@ -630,7 +629,7 @@ void func_13() {
 void func_14() {
   float x0 = x_bottom_left;
   float y0 = ((2.0 * y_top_right)/3.0) + y_bottom_right/3.0; 
-  pen_up();
+//  pen_up();
   move(x0,y0);
   pen_down();
 
@@ -644,7 +643,7 @@ void func_14() {
 void func_15() {
   float x0 = (x_bottom_left + x_bottom_right)/2;
   float y0 = y_top_left; 
-  pen_up();
+//  pen_up();
   move(x0,y0);
   pen_down();
 
@@ -657,7 +656,7 @@ void func_15() {
 void func_16() {
   float x0 = x_bottom_left;
   float y0 = ((2.0 * y_top_right)/3.0) + y_bottom_right/3.0; 
-  pen_up();
+//  pen_up();
   move(x0,y0);
   pen_down();
 
@@ -677,7 +676,7 @@ void func_17() {
   float x2 = (x_bottom_right + x_bottom_left)/2;
   float x3 = x_bottom_right;
 
-  pen_up();
+//  pen_up();
   move(x1,o1_y);
   pen_down();
 
@@ -690,7 +689,7 @@ void func_17() {
 void func_18() {
   float x0 = x_bottom_left;
   float y0 = ((2.0 * y_top_right)/3.0) + y_bottom_right/3.0; 
-  pen_up();
+//  pen_up();
   move(x0,y0);
   pen_down();
 
@@ -704,7 +703,7 @@ void func_19 () {
   float x0 = x_bottom_right;
   float y0 = ((2.0*y_top_right)/3.0) + (y_bottom_right/3.0);
 
-  pen_up();
+//  pen_up();
   move (x0, y0);
   pen_down();
   float x = x_bottom_right;
@@ -716,7 +715,7 @@ void func_19 () {
 void func_20() {
   float x0 = x_bottom_left;
   float y0 = ((2.0 * y_top_right)/3.0) + y_bottom_right/3.0; 
-  pen_up();
+//  pen_up();
   move(x0,y0);
   pen_down();
 
@@ -730,7 +729,7 @@ void func_21() {
   float x0 = x_bottom_left;
   float y0 = ((2.0 * y_top_right)/3.0) + y_bottom_right/3.0;
   
-  pen_up();
+//  pen_up();
   move (x0, y0);
   pen_down();
   float x1 = x_bottom_left;
@@ -765,7 +764,7 @@ void func_22() {
   float x4 = (x_bottom_left + x_bottom_right)/2;
   float y4 = ((2.0 * y_bottom_left)/3.0) + y_top_left/3.0;
   
-  pen_up();
+//  pen_up();
   move(x1, y1);
   pen_down();
   float theta1 = pi/4;
@@ -811,7 +810,7 @@ void func_25() {
  float c_x = x_bottom_right;
  float c_y = ((2.0*y_top_right)/3.0) + (y_bottom_right/3.0);
 
- pen_up();
+// pen_up();
  move(o_x, o_y);
  pen_down();
 
@@ -824,7 +823,7 @@ void func_25() {
 void func_24() {
   float x0 = x_bottom_left;
   float y0 = ((2.0 * y_top_right)/3.0) + y_bottom_right/3.0; 
-  pen_up();
+//  pen_up();
   move(x0,y0);
   pen_down();
 
@@ -842,7 +841,7 @@ void func_26() {
   float x0 = x_bottom_right;
   float y0 = ((2.0*y_top_right)/3.0) + (y_bottom_right/3.0);
 
-  pen_up();
+//  pen_up();
   move (x0, y0);
   pen_down();
   float x = x_bottom_left;
@@ -855,7 +854,7 @@ void func_26() {
 void func_27() {
   float x0 = x_bottom_left;
   float y0 = ((2.0 * y_bottom_left)/3.0) + y_top_left/3.0; 
-  pen_up();
+//  pen_up();
   move(x0,y0);
   pen_down();
 
@@ -889,23 +888,25 @@ void box() {
 
 void draw_a() {
   func_1();
-  func_2();    
+  func_2();
+  pen_up();    
 }
 
 void draw_b(){
   func_3();
-  func_28();  
+  func_28();
+  pen_up();
 }
 
 void draw_c() {
   func_4();
-
+  pen_up();
 }
 
 void draw_d(){
   func_1();
   func_5();  
-  
+  pen_up();
 }
 
 void draw_e() {
@@ -913,167 +914,252 @@ void draw_e() {
 //  func_7();  
     func_7();
     func_4();
+    pen_up();
 }
 
 void draw_f() {
   func_8();
+  pen_up();
   func_20();
+  pen_up();
 }
 
 void draw_g() {
   func_1();
   func_9();
+  pen_up();
 }
 
 void draw_h() {
   func_3();
   func_6();
-  func_12();  
+  func_12();
+  pen_up();  
 }
 
 void draw_i() {
   func_10();
+  pen_up();
 }
 
 void draw_j(){
-  func_9(); 
+  func_9();
+  pen_up(); 
+  func_11();
+  pen_up();
 }
 
 void draw_k(){
   func_3();
+  pen_up();
   func_13();
-  func_14();  
+  func_14(); 
+  pen_up(); 
 }
 
 void draw_l(){
   func_15();
+  pen_up();
 }
 
 void draw_m() {
   func_16();
   func_17();
+  pen_up();
 }
 
 void draw_n() {
   func_16();
   func_6();
   func_12();
+  pen_up();
 }
 
 void draw_o() { 
   func_1();  
+  pen_up();
 }
 
 void draw_p() {
   func_18();
   func_28();
+  pen_up();
 }
 void draw_q(){
   func_1();
-  func_19();  
+  func_19();
+  pen_up();  
 }
 
 void draw_r() {
   func_16();
-  func_6();  
+  func_6();
+  pen_up();  
 }
 
 void draw_s() {
   func_22();
+  pen_up();
 }
 
 void draw_t() {
   func_15();
+  pen_up();
   func_20();
+  pen_up();
 }
 
 void draw_u() {
   func_21();
-  func_23();  
+  func_23();
+  func_12();
+  pen_up();  
 }
 
 void draw_v() {
-  func_24();  
+  func_24();
+  pen_up();    
 }
 
 void draw_w() {
   func_25();
+  pen_up();  
 }
 
 void draw_x() {
   func_14();
+  pen_up();  
   func_26();
+  pen_up();  
 }
 void draw_y() {
   func_21();
-  func_9();    
+  func_9();
+  pen_up();      
 }
 
 void draw_z() {
   func_20();
   func_26();
-  func_27();  
+  func_27();
+  pen_up();    
 }
 
 
 //////////////////////////////////////////////////////
 void loop() {
+    pen_up(); //Always start with pen_up--this is the default state
+    
+    if (Serial.available() > 0) { //Wait for serial input to do anything.
+      String inputWord = Serial.readString();
+      inputWord.toLowerCase();
+      Serial.println("Writing: " + inputWord + ".");
+    
+      for (int i = 0; i < inputWord.length(); i++) {
+        switch (inputWord[i]) {
+          case 'a':
+            draw_a();
+            break;
+          case 'b':
+            draw_b();
+            break;
+          case 'c':
+            draw_c();
+            break;
+          case 'd':
+            draw_d();
+            break;
+          case 'e':
+            draw_e();
+            break;
+          case 'f':
+            draw_f();
+            break;
+          case 'g':
+            draw_g();
+            break;
+          case 'h':
+            draw_h();
+            break;
+          case 'i':
+            draw_i();
+            break;
+          case 'j':
+            draw_j();
+            break;
+          case 'k':
+            draw_k();
+            break;
+          case 'l':
+            draw_l();
+            break;
+          case 'm':
+            draw_m();
+            break;
+          case 'n':
+            draw_n();
+            break;
+          case 'o':
+            draw_o();
+            break;
+          case 'p':
+            draw_p();
+            break;
+          case 'q':
+            draw_q();
+            break;
+          case 'r':
+            draw_r();
+            break;
+          case 's':
+            draw_s();
+            break;
+          case 't':
+            draw_t();
+            break;
+          case 'u':
+            draw_u();
+            break;
+          case 'v':
+            draw_v();
+            break;
+          case 'w':
+            draw_w();
+            break;
+          case 'x':
+            draw_x();
+            break;
+          case 'y':
+            draw_y();
+            break;
+          case 'z':
+            draw_z();
+            break;
+          case ' ':
+            break;
+        }
+        timeLoop(millis(), 1000);
+        moveMotors();
+      }
+    
 //  arc(X_HOME, Y_HOME-15, X_HOME + 5, Y_HOME-15, 2.0*pi);
 
-    draw_b();
-    pen_up();
-    timeLoop(millis(), 1000);
-    moveMotors();
-    timeLoop(millis(), 1000);
-    pen_down();
+//      draw_h();
+//      timeLoop(millis(), 1000);
+//      moveMotors();
+//      draw_i();
+//      timeLoop(millis(), 1000);
+//      moveMotors();
+//      draw_j();
+//      timeLoop(millis(), 1000);
+//      moveMotors();    
+//      draw_k();
+//      timeLoop(millis(), 1000);
+//      moveMotors();
+    }
 
-    draw_e();
-    pen_up();
-    timeLoop(millis(), 1000);
-    moveMotors();
-    timeLoop(millis(), 1000);
-    pen_down();
-
-    draw_r();
-    pen_up();
-    timeLoop(millis(), 1000);
-    moveMotors();
-    timeLoop(millis(), 1000);
-    pen_down();
-
-    draw_k();
-    pen_up();
-    timeLoop(millis(), 1000);
-    moveMotors();
-    timeLoop(millis(), 1000);
-    pen_down();
-//
-//    draw_e();
-//    pen_up();
-//    moveMotors();
-//    timeLoop(millis(), 2000);
-//    pen_down();
-//
-//    draw_l();
-//    pen_up();
-//    moveMotors();
-//    timeLoop(millis(), 2000);
-//    pen_down();
-//    
-//    draw_e();
-//    pen_up();
-//    moveMotors();
-//    timeLoop(millis(), 2000);
-//    pen_down();
-//
-//    draw_y();
-//    pen_up();
-//    moveMotors();
-//    timeLoop(millis(), 2000);
-//    pen_down();
-
-
-    exit(0);
+    
+//    exit(0);
     
 
 //  box();
