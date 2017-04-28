@@ -94,7 +94,7 @@ float left_servo_180 = 2440;
 float right_servo_0 = 580;
 float right_servo_180 = 2300;
 float lift_servo_write = 1450; //between 1450-1500 depending on pen length
-float lift_servo_pause = 1350; //was 700
+float lift_servo_pause = 1375; //was 700 , 1350
 
 // // // // // // // // // // // // // // // // // // // // // // // //
 // // // // // // // // // // // // // // // // // // // // // // // //
@@ -133,11 +133,13 @@ double y_top_left = Y_HOME-25 + 20 + 6; //74.38
 double x_top_right = X_HOME + 15 - 7.5 - 2.5; //28.5
 double y_top_right = y_top_left; //74.38
 
+double skew = 0.0;
+
 double x_bottom_left = x_top_left; //18.5
-double y_bottom_left = Y_HOME-25 - 0 - 4; //44.38
+double y_bottom_left = Y_HOME-25 - 0 - 4 + skew; //44.38
 
 double x_bottom_right = x_top_right; //28.5
-double y_bottom_right = y_bottom_left; //44.38 
+double y_bottom_right = y_bottom_left + skew; //44.38 
 
 // We update these arrays as we move the robot.
 float J[2][2]; // this is the Jacobian
@@ -203,7 +205,7 @@ void shiftPaper() {
     analogWrite(motor1Pin2, onSpeed);
     analogWrite(motor2Pin1, offSpeed);
     analogWrite(motor2Pin2, onSpeed);
-    timeLoop(millis(), 300);
+    timeLoop(millis(), 70);
    // Turn off motors after character space stopped.
     analogWrite(motor1Pin1, offSpeed);
     analogWrite(motor1Pin2, offSpeed);
@@ -217,7 +219,7 @@ void tightenPaper() {
     analogWrite(motor1Pin2, onSpeed);
     analogWrite(motor2Pin1, onSpeed);
     analogWrite(motor2Pin2, offSpeed);
-    timeLoop(millis(), 5000);
+    timeLoop(millis(), 100);
     analogWrite(motor1Pin1, offSpeed);
     analogWrite(motor1Pin2, offSpeed);
     analogWrite(motor2Pin1, offSpeed);
@@ -260,8 +262,14 @@ float mag(float v1, float v2) {
 // Moves and updates the current robot configuration over some time until
 // end effector reaches the desired point: q = (xdes, ydes).
 void move(float xdes, float ydes) {
+  float m = 0.33;
+
+  //Correct for skewing:
+  xdes = xdes + m*(ydes-y_bottom_left);
+
   float alpha = step_size;
   int i = 0;
+
   while (mag(xdes - x_cur, ydes - y_cur) > tolerance && i < MAX_MOVES) {
 //    Serial.println("[MOVE] Current position @ iteration " + String(i) + ", x_cur: " + String(x_cur, 2) + ", y_cur: " + String(y_cur, 2) + ", t1_cur: " + String(t1_cur, 2) + ", t2_cur: " + String(t2_cur, 2));
     timeLoop(millis(), 50);
@@ -343,6 +351,7 @@ void pen_down() {
 }
 
 void pen_up() {
+  timeLoop(millis(), 300);
   // Pen up.
   lift_servo.writeMicroseconds(lift_servo_pause);
 }
@@ -1098,6 +1107,9 @@ void loop() {
       Serial.println("Writing: " + inputWord + ".");
       
       for (int i = 0; i < inputWord.length(); i++) {
+//        pen_down();
+//        box();
+//        return_to_home();
         switch (inputWord[i]) {
           case 'a':
             draw_a();
@@ -1180,10 +1192,11 @@ void loop() {
           case ' ':
             break;
         }
-        timeLoop(millis(), 500); //Added to prevent flicks
+        timeLoop(millis(), 1000); //Added to prevent flicks
         return_to_home(); //Reset x, y, t1, t2 curr to prevent drfting
         timeLoop(millis(), 500);
         shiftPaper();
+        timeLoop(millis(), 500);
         tightenPaper();
       }
     }
