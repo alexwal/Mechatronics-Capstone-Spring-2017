@@ -53,9 +53,11 @@
 #define SERVO_PIN_LEFT  9
 #define SERVO_PIN_RIGHT 13
 
-int motor1Pin = 5;
-int motor2Pin = 6;
-int onSpeed = 150;
+int motor1Pin1 = 3;
+int motor1Pin2 = 5;
+int motor2Pin1 = 6;
+int motor2Pin2= 10;
+int onSpeed = 170;
 int offSpeed = 0;
 boolean notWriting = true;
 
@@ -149,8 +151,10 @@ float right_rad_to_joint_angle(float rad) {
 }
 
 void setup() {
-  pinMode(motor1Pin, OUTPUT);
-  pinMode(motor2Pin, OUTPUT);
+    pinMode(motor1Pin1, OUTPUT);
+    pinMode(motor1Pin2, OUTPUT); 
+    pinMode(motor2Pin1, OUTPUT);
+    pinMode(motor2Pin2, OUTPUT);
   
   // Start serial monitor.
   Serial.begin(9600);
@@ -193,16 +197,31 @@ void timeLoop (long int startMillis, long int interval) { // the delay function
   while (millis() - startMillis < interval) {}
 }
 
-void moveMotors() {
+void shiftPaper() {
    // Motors turned on, move paper distance of ____ with on time of _____.
-   analogWrite(motor1Pin, offSpeed);
-   analogWrite(motor2Pin, onSpeed);
-   delay(250);
+    analogWrite(motor1Pin1, offSpeed);
+    analogWrite(motor1Pin2, onSpeed);
+    analogWrite(motor2Pin1, offSpeed);
+    analogWrite(motor2Pin2, onSpeed);
+    timeLoop(millis(), 300);
    // Turn off motors after character space stopped.
-   analogWrite(motor1Pin, offSpeed);
-   analogWrite(motor2Pin, offSpeed);
-   delay(2000);
-   
+    analogWrite(motor1Pin1, offSpeed);
+    analogWrite(motor1Pin2, offSpeed);
+    analogWrite(motor2Pin1, offSpeed);
+    analogWrite(motor2Pin2, offSpeed);
+//   delay(2000);  
+}
+
+void tightenPaper() {
+    analogWrite(motor1Pin1, offSpeed);
+    analogWrite(motor1Pin2, onSpeed);
+    analogWrite(motor2Pin1, onSpeed);
+    analogWrite(motor2Pin2, offSpeed);
+    timeLoop(millis(), 5000);
+    analogWrite(motor1Pin1, offSpeed);
+    analogWrite(motor1Pin2, offSpeed);
+    analogWrite(motor2Pin1, offSpeed);
+    analogWrite(motor2Pin2, offSpeed);
 }
 
 // Used in finding: theta' = J * q', the required nudge of angles to get
@@ -310,7 +329,7 @@ void move(float xdes, float ydes) {
   //  }
 
   // Done moving servos along joint path.
-  // return_pen_to_home();
+//   return_to_home();
 }
 
 
@@ -374,7 +393,7 @@ void line(float x0, float y0, float x1, float y1){
 
 void return_to_home() {
 //  pen_up();
-  move(X_HOME, Y_HOME); // gets us pretty close to original position so that we can explicitly set servo angle.
+//  move(X_HOME, Y_HOME); // gets us pretty close to original position so that we can explicitly set servo angle.
   double rad = pi / 2;
   double left_us   =   left_rad_to_joint_angle(rad);
   double right_us  =   right_rad_to_joint_angle(rad);
@@ -382,6 +401,10 @@ void return_to_home() {
   right_servo.writeMicroseconds(right_us); // RECORD RANGES ABOVE!
   x_cur = X_HOME;
   y_cur = Y_HOME;
+  
+  //Victor added this below (omg wait it actually worked lmao)
+  t1_cur = rad;
+  t2_cur = rad;
 //  pen_down();
 }
 
@@ -888,12 +911,14 @@ void box() {
 
 void draw_a() {
   func_1();
+  timeLoop(millis(),300);
   func_2();
   pen_up();    
 }
 
 void draw_b(){
   func_3();
+  timeLoop(millis(),300);
   func_28();
   pen_up();
 }
@@ -905,6 +930,7 @@ void draw_c() {
 
 void draw_d(){
   func_1();
+  timeLoop(millis(),300);
   func_5();  
   pen_up();
 }
@@ -926,12 +952,14 @@ void draw_f() {
 
 void draw_g() {
   func_1();
+  timeLoop(millis(),300);
   func_9();
   pen_up();
 }
 
 void draw_h() {
   func_3();
+  timeLoop(millis(),300);
   func_6();
   func_12();
   pen_up();  
@@ -964,12 +992,14 @@ void draw_l(){
 
 void draw_m() {
   func_16();
+  timeLoop(millis(),300);
   func_17();
   pen_up();
 }
 
 void draw_n() {
   func_16();
+  timeLoop(millis(),300);
   func_6();
   func_12();
   pen_up();
@@ -982,17 +1012,20 @@ void draw_o() {
 
 void draw_p() {
   func_18();
+  timeLoop(millis(),300);
   func_28();
   pen_up();
 }
 void draw_q(){
   func_1();
+  timeLoop(millis(),300);
   func_19();
   pen_up();  
 }
 
 void draw_r() {
   func_16();
+  timeLoop(millis(),300);
   func_6();
   pen_up();  
 }
@@ -1049,12 +1082,21 @@ void draw_z() {
 //////////////////////////////////////////////////////
 void loop() {
     pen_up(); //Always start with pen_up--this is the default state
+
+//    //Testing:
+//    pen_down();
+//    left_servo.writeMicroseconds(1500);
+//    right_servo.writeMicroseconds(1500);
+//    timeLoop(millis(), 500);
+//    left_servo.writeMicroseconds(1400);
+//    right_servo.writeMicroseconds(1600);
+//    
     
     if (Serial.available() > 0) { //Wait for serial input to do anything.
       String inputWord = Serial.readString();
       inputWord.toLowerCase();
       Serial.println("Writing: " + inputWord + ".");
-    
+      
       for (int i = 0; i < inputWord.length(); i++) {
         switch (inputWord[i]) {
           case 'a':
@@ -1138,24 +1180,12 @@ void loop() {
           case ' ':
             break;
         }
-        timeLoop(millis(), 1000);
-        moveMotors();
+        timeLoop(millis(), 500); //Added to prevent flicks
+        return_to_home(); //Reset x, y, t1, t2 curr to prevent drfting
+        timeLoop(millis(), 500);
+        shiftPaper();
+        tightenPaper();
       }
-    
-//  arc(X_HOME, Y_HOME-15, X_HOME + 5, Y_HOME-15, 2.0*pi);
-
-//      draw_h();
-//      timeLoop(millis(), 1000);
-//      moveMotors();
-//      draw_i();
-//      timeLoop(millis(), 1000);
-//      moveMotors();
-//      draw_j();
-//      timeLoop(millis(), 1000);
-//      moveMotors();    
-//      draw_k();
-//      timeLoop(millis(), 1000);
-//      moveMotors();
     }
 
     
