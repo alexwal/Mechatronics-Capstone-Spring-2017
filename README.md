@@ -3,9 +3,15 @@
 UC Berkeley ME 102B: Mechatronics, Spring 2017<br>
 Dilveen Goraya, Victor Tieu, Debleena Sengupta, Alex Walczak
 
+<br>
+<br>
+
 <p align="center">
 <img src="./chicken_scratch.jpg" height="388" width="598" >
 </p>
+
+ 
+<br> <br>
 
 <!-- Video link: -->
 <!-- <iframe src="https://drive.google.com/file/d/0B6183kZa-7tDazhRMGVBSl9jV2s/preview" width="640" height="480"></iframe> -->
