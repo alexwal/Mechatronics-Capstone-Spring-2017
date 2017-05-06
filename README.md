@@ -6,7 +6,7 @@ UC Berkeley ME 102B: Mechatronics, Spring 2017
 
 <p>
 <a>
-<img src="https://lh3.googleusercontent.com/uFjtojEVY6DSkjY81LIu9SMOR4FosFmGBAC3KW7vD8Dp-PvxdiRSC1GQ797y1yQ9Q10CtRho=w1175" align="left" height="534" width="300" >
+<img src="./chicken_scratch.jpg" align="left" height="534" width="300" >
 </a>
 </p>
 
