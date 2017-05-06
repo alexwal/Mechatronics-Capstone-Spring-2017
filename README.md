@@ -1,15 +1,10 @@
 # Chicken Scratch
 ## A small interactive robot that handwrites short notes
 
-UC Berkeley ME 102B: Mechatronics, Spring 2017
-
+UC Berkeley ME 102B: Mechatronics, Spring 2017<br>
 Dilveen Goraya, Victor Tieu, Debleena Sengupta, Alex Walczak
 
-<p>
-<a>
 <img src="./chicken_scratch.jpg" align="left" height="388" width="598" >
-</a>
-</p>
 
 <!-- Video link: -->
 <!-- <iframe src="https://drive.google.com/file/d/0B6183kZa-7tDazhRMGVBSl9jV2s/preview" width="640" height="480"></iframe> -->
